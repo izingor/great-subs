@@ -1,0 +1,66 @@
+from datetime import datetime
+from typing import Optional
+
+from sqlmodel import Session, select
+
+from models import Submission, SubmissionCreate, SubmissionUpdate
+
+
+def get_submissions(
+    session: Session,
+    *,
+    status: Optional[str] = None,
+    name: Optional[str] = None,
+) -> list[Submission]:
+    """Return submissions with optional status and name filters."""
+    statement = select(Submission)
+    if status:
+        statement = statement.where(Submission.status == status)
+    if name:
+        statement = statement.where(Submission.name.contains(name))  # type: ignore[union-attr]
+    return list(session.exec(statement).all())
+
+
+def get_submission(session: Session, submission_id: int) -> Optional[Submission]:
+    """Return a single submission by id, or None."""
+    return session.get(Submission, submission_id)
+
+
+def create_submission(session: Session, data: SubmissionCreate) -> Submission:
+    """Insert a new submission and return it."""
+    submission = Submission.model_validate(data)
+    session.add(submission)
+    session.commit()
+    session.refresh(submission)
+    return submission
+
+
+def update_submission(
+    session: Session,
+    submission_id: int,
+    data: SubmissionUpdate,
+) -> Optional[Submission]:
+    """Partially update a submission. Returns None if not found."""
+    submission = session.get(Submission, submission_id)
+    if not submission:
+        return None
+
+    update_data = data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(submission, key, value)
+
+    submission.updated_at = datetime.utcnow()
+    session.add(submission)
+    session.commit()
+    session.refresh(submission)
+    return submission
+
+
+def delete_submission(session: Session, submission_id: int) -> bool:
+    """Delete a submission. Returns True if deleted, False if not found."""
+    submission = session.get(Submission, submission_id)
+    if not submission:
+        return False
+    session.delete(submission)
+    session.commit()
+    return True
