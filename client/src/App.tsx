@@ -10,9 +10,7 @@ const App = (): React.ReactElement => (
 		<ThemeProvider attribute='class' defaultTheme='system' enableSystem>
 			<div className='min-h-screen bg-background text-foreground transition-colors'>
 				<Header />
-				<main>
-					<SubmissionsPage />
-				</main>
+				<SubmissionsPage />
 			</div>
 			<Toaster richColors closeButton position='bottom-right' />
 		</ThemeProvider>

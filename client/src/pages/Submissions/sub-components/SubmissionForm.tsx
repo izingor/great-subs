@@ -4,7 +4,14 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogFooter,
+} from '@/components/ui/dialog'
 import { useCreateSubmissionMutation, useUpdateSubmissionMutation } from '@/store/api'
 import type { Submission } from '@/types/submission'
 import { toast } from 'sonner'
@@ -39,18 +46,15 @@ export const SubmissionForm = ({ open, onClose, submission }: SubmissionFormProp
 	})
 
 	const onSubmit = async (values: SubmissionFormValues): Promise<void> => {
-		try {
-			if (isEditMode && submission) {
-				await updateSubmission({ id: submission.id, data: values }).unwrap()
-				toast.success('Submission updated successfully')
-			} else {
-				await createSubmission(values).unwrap()
-				toast.success('Submission created successfully')
-			}
+		const result =
+			isEditMode && submission
+				? await updateSubmission({ id: submission.id, data: values })
+				: await createSubmission(values)
+
+		if (result?.data) {
+			toast.success(isEditMode ? 'Submission updated successfully' : 'Submission created successfully')
 			reset()
 			onClose()
-		} catch {
-			/* error middleware handles toast */
 		}
 	}
 
@@ -66,6 +70,11 @@ export const SubmissionForm = ({ open, onClose, submission }: SubmissionFormProp
 			<DialogContent className='sm:max-w-md'>
 				<DialogHeader>
 					<DialogTitle>{isEditMode ? 'Edit Submission' : 'New Submission'}</DialogTitle>
+					<DialogDescription>
+						{isEditMode
+							? 'Update the submission details below.'
+							: 'Fill in the details to create a new submission.'}
+					</DialogDescription>
 				</DialogHeader>
 				<form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
 					<div className='space-y-2'>
