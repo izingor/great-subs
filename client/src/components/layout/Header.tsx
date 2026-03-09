@@ -12,7 +12,7 @@ export const Header = ({ children }: HeaderProps): React.ReactElement => (
 				<div className='flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm'>
 					S
 				</div>
-				<span className='text-xl font-bold tracking-tight'>Sayata</span>
+				<span className='text-xl font-bold tracking-tight'>Sub Manager</span>
 			</div>
 			<div className='flex items-center gap-2'>
 				{children}
