@@ -4,14 +4,19 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import create_db_and_tables
+from logger import build_logger
 from routers.submissions import router as submissions_router
+
+log = build_logger("api")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Create database tables on startup."""
+    log.info("Starting up — initialising database tables")
     create_db_and_tables()
+    log.info("Database ready")
     yield
+    log.info("Shutting down")
 
 
 app = FastAPI(
@@ -21,18 +26,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# ---------------------------------------------------------------------------
-# CORS – allow the Vite dev-server origin
-# ---------------------------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ---------------------------------------------------------------------------
-# Routers
-# ---------------------------------------------------------------------------
 app.include_router(submissions_router, prefix="/submissions", tags=["submissions"])
