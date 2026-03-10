@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import type { Submission, SubmissionCreatePayload, SubmissionUpdatePayload } from '@/types/submission'
+import type { BindResponse, Submission, SubmissionCreatePayload, SubmissionUpdatePayload } from '@/types/submission'
 
 const BASE_URL = 'http://localhost:8000'
 
@@ -59,7 +59,7 @@ export const submissionsApi = createApi({
 			invalidatesTags: [{ type: 'Submission', id: 'LIST' }],
 		}),
 
-		bindSubmission: builder.mutation<Submission, number>({
+		bindSubmission: builder.mutation<BindResponse, number>({
 			query: (id) => ({
 				url: `/submissions/${id}/bind`,
 				method: 'POST',

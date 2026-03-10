@@ -18,3 +18,8 @@ export type SubmissionUpdatePayload = {
 	readonly name?: string
 	readonly status?: SubmissionStatus
 }
+
+export type BindResponse = {
+	readonly submission: Submission
+	readonly attempts: number
+}

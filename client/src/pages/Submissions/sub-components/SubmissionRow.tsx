@@ -32,8 +32,8 @@ export const SubmissionRow = ({ submission, onEdit }: SubmissionRowProps): React
 
 	const handleBind = async (): Promise<void> => {
 		try {
-			await bindSubmission(submission.id).unwrap()
-			toast.success(`"${submission.name}" bound successfully`)
+			const { attempts } = await bindSubmission(submission.id).unwrap()
+			toast.success(`"${submission.name}" bound successfully in ${attempts} attempt${attempts === 1 ? '' : 's'}`)
 		} catch {
 			/* error middleware handles toast */
 		}

@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import update
 from sqlmodel import Session
 
+from bind_client import call_bind_service
 from crud import (
     create_submission,
     delete_submission,
@@ -85,30 +86,18 @@ def remove_submission(
 # ---------------------------------------------------------------------------
 
 
-@router.post("/{submission_id}/bind", response_model=SubmissionRead)
-def bind_submission(
+@router.post("/{submission_id}/bind")
+async def bind_submission(
     submission_id: int,
     session: Session = Depends(get_session),
 ):
-    """
-    Attempt to bind a submission.
-
-    1. Idempotency  – If already bound, return immediately.
-    2. Atomic claim – UPDATE … WHERE to acquire a 2-minute lease.
-    3. External call – (TODO stub).
-    4. Finalise     – Set status='bound', clear the lease.
-    """
-
-    # --- Fetch the submission ------------------------------------------------
     submission = get_submission(session, submission_id)
     if not submission:
         raise HTTPException(status_code=404, detail="Submission not found")
 
-    # --- 1. Idempotency check ------------------------------------------------
     if submission.status == "bound":
-        return submission
+        return {"submission": SubmissionRead.model_validate(submission), "attempts": 0}
 
-    # --- 2. Atomic claim (concurrency lock) ----------------------------------
     now = datetime.utcnow()
     lease_cutoff = now - timedelta(seconds=CLAIM_LEASE_SECONDS)
 
@@ -132,16 +121,14 @@ def bind_submission(
             detail="Submission is currently being processed by another worker",
         )
 
-    # --- 3. External Bind Service call ---------------------------------------
-    # TODO: Implement external Bind Service call with tenacity
+    success, attempts = await call_bind_service()
 
-    # --- 4. Finalise – mark as bound, clear the lease ------------------------
     session.refresh(submission)
-    submission.status = "bound"
+    submission.status = "bound" if success else "bind_failed"
     submission.claimed_at = None
     submission.updated_at = datetime.utcnow()
     session.add(submission)
     session.commit()
     session.refresh(submission)
 
-    return submission
+    return {"submission": SubmissionRead.model_validate(submission), "attempts": attempts}
