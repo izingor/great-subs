@@ -34,7 +34,7 @@ export const SubmissionFilters: React.FC<SubmissionFiltersProps> = ({ filters, o
 	const debouncedSearch = useRef(
 		debounce((value: string) => {
 			const { filters: currentFilters, onFilterChange: currentOnFilterChange } = latestPropsRef.current
-			currentOnFilterChange({ ...currentFilters, search: value })
+			currentOnFilterChange({ ...currentFilters, search: value, page: 1 })
 		}, 500),
 	).current
 
@@ -45,13 +45,13 @@ export const SubmissionFilters: React.FC<SubmissionFiltersProps> = ({ filters, o
 	}
 
 	const handleStatusChange = (status: string): void => {
-		onFilterChange({ ...filters, status })
+		onFilterChange({ ...filters, status, page: 1 })
 	}
 
 	const clearSearch = (): void => {
 		setSearchValue('')
 		debouncedSearch.clear()
-		onFilterChange({ ...filters, search: '' })
+		onFilterChange({ ...filters, search: '', page: 1 })
 	}
 
 	return (

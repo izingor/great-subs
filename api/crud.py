@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 
 from models import Submission, SubmissionCreate, SubmissionUpdate
 
@@ -11,14 +11,23 @@ def get_submissions(
     *,
     status: Optional[str] = None,
     name: Optional[str] = None,
-) -> list[Submission]:
-    """Return submissions with optional status and name filters."""
+    page: int = 1,
+    size: int = 10,
+) -> tuple[list[Submission], int]:
+    """Return paginated submissions and total count."""
     statement = select(Submission)
     if status:
         statement = statement.where(Submission.status == status)
     if name:
         statement = statement.where(Submission.name.contains(name))  # type: ignore[union-attr]
-    return list(session.exec(statement).all())
+
+    count_statement = select(func.count()).select_from(statement.subquery()) # type: ignore
+    total = session.exec(count_statement).one()
+
+    statement = statement.offset((page - 1) * size).limit(size)
+    items = list(session.exec(statement).all())
+    
+    return items, total
 
 
 def get_submission(session: Session, submission_id: int) -> Optional[Submission]:

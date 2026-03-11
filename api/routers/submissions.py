@@ -14,7 +14,7 @@ from crud import (
 )
 from database import get_session
 from logger import build_logger
-from models import Submission, SubmissionCreate, SubmissionRead, SubmissionUpdate
+from models import PaginatedSubmissions, Submission, SubmissionCreate, SubmissionRead, SubmissionUpdate
 
 log = build_logger("api.submissions")
 
@@ -23,16 +23,18 @@ router = APIRouter()
 CLAIM_LEASE_SECONDS = 120
 
 
-@router.get("/", response_model=list[SubmissionRead])
+@router.get("/", response_model=PaginatedSubmissions)
 def list_submissions(
     status: str | None = Query(default=None, description="Filter by status"),
     name: str | None = Query(default=None, description="Search by name (contains)"),
+    page: int = Query(default=1, ge=1, description="Page number"),
+    size: int = Query(default=10, ge=1, le=100, description="Items per page"),
     session: Session = Depends(get_session),
-) -> list[SubmissionRead]:
-    log.debug("Listing submissions — status_filter=%s name_filter=%s", status, name)
-    results = get_submissions(session, status=status, name=name)
-    log.debug("Returning %d submissions", len(results))
-    return results
+) -> PaginatedSubmissions:
+    log.debug("Listing submissions — status_filter=%s name_filter=%s page=%d size=%d", status, name, page, size)
+    items, total = get_submissions(session, status=status, name=name, page=page, size=size)
+    log.debug("Returning %d submissions (total %d)", len(items), total)
+    return PaginatedSubmissions(items=items, total=total, page=page, size=size)
 
 
 @router.post("/", response_model=SubmissionRead, status_code=201)

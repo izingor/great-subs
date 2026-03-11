@@ -33,6 +33,20 @@ class Submission(SQLModel, table=True):
 # Request / Response schemas
 # ---------------------------------------------------------------------------
 
+class SubmissionRead(SQLModel):
+    id: int
+    name: str
+    status: str
+    created_at: datetime
+    updated_at: datetime
+    claimed_at: Optional[datetime]
+
+class PaginatedSubmissions(SQLModel):
+    items: list[SubmissionRead]
+    total: int
+    page: int
+    size: int
+
 class SubmissionCreate(SQLModel):
     name: str
     status: str = "new"

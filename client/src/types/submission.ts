@@ -24,7 +24,16 @@ export type BindResponse = {
 	readonly attempts: number
 }
 
+export type PaginatedSubmissions = {
+	readonly items: Submission[]
+	readonly total: number
+	readonly page: number
+	readonly size: number
+}
+
 export type SubmissionsFilter = {
 	readonly status: string
 	readonly search: string
+	readonly page: number
+	readonly size: number
 }

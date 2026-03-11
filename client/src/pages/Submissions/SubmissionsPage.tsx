@@ -24,6 +24,8 @@ export const SubmissionsPage = (): React.ReactElement => {
 	const [filters, setFilters] = useState<SubmissionsFilter>({
 		status: ALL_STATUSES,
 		search: '',
+		page: 1,
+		size: 10,
 	})
 	const [formOpen, setFormOpen] = useState(false)
 	const [editingSubmission, setEditingSubmission] = useState<Submission | undefined>()
@@ -31,6 +33,8 @@ export const SubmissionsPage = (): React.ReactElement => {
 	const queryParams = {
 		...(filters.status !== ALL_STATUSES && { status: filters.status }),
 		...(filters.search && { name: filters.search }),
+		page: filters.page,
+		size: filters.size,
 	}
 
 	const { data: submissions, isLoading } = useGetSubmissionsQuery(queryParams)
@@ -68,7 +72,16 @@ export const SubmissionsPage = (): React.ReactElement => {
 
 			<SubmissionFilters filters={filters} onFilterChange={setFilters} />
 
-			<SubmissionList submissions={submissions} isLoading={isLoading} onEdit={openEditForm} />
+			<SubmissionList 
+				submissions={submissions?.items} 
+				total={submissions?.total ?? 0}
+				page={filters.page}
+				size={filters.size}
+				isLoading={isLoading} 
+				onPageChange={(page) => setFilters(prev => ({ ...prev, page }))}
+				onSizeChange={(size) => setFilters(prev => ({ ...prev, size, page: 1 }))}
+				onEdit={openEditForm} 
+			/>
 
 			<SubmissionForm
 				key={editingSubmission?.id ?? 'create'}

@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import type { BindResponse, Submission, SubmissionCreatePayload, SubmissionUpdatePayload } from '@/types/submission'
+import type { BindResponse, PaginatedSubmissions, Submission, SubmissionCreatePayload, SubmissionUpdatePayload } from '@/types/submission'
 
 const BASE_URL = 'http://localhost:8000'
 
@@ -8,18 +8,20 @@ export const submissionsApi = createApi({
 	baseQuery: fetchBaseQuery({ baseUrl: BASE_URL }),
 	tagTypes: ['Submission'],
 	endpoints: (builder) => ({
-		getSubmissions: builder.query<Submission[], { status?: string; name?: string }>({
+		getSubmissions: builder.query<PaginatedSubmissions, { status?: string; name?: string; page?: number; size?: number }>({
 			query: (params) => ({
 				url: '/submissions/',
 				params: {
 					...(params.status && { status: params.status }),
 					...(params.name && { name: params.name }),
+					...(params.page && { page: params.page }),
+					...(params.size && { size: params.size }),
 				},
 			}),
 			providesTags: (result) =>
 				result
 					? [
-							...result.map(({ id }) => ({ type: 'Submission' as const, id })),
+							...result.items.map(({ id }) => ({ type: 'Submission' as const, id })),
 							{ type: 'Submission', id: 'LIST' },
 						]
 					: [{ type: 'Submission', id: 'LIST' }],
