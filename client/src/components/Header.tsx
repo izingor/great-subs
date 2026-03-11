@@ -24,32 +24,49 @@ const StyledAppBar = styled(AppBar)(({ theme }) => ({
   color: theme.palette.text.primary,
 }));
 
+const LogoText = styled(Subtitle)({
+  fontWeight: 600,
+  color: "inherit",
+  margin: 0,
+});
+
+const LogoIcon = styled("img")({
+  height: 36,
+  width: 36,
+});
+
+const LogoContainer = styled(Box)({
+  display: "flex",
+  alignItems: "center",
+  gap: 1.5,
+});
+
+const StyledToolbar = styled(Toolbar)({
+  minHeight: "64px",
+  justifyContent: "space-between",
+});
+
+const HeaderActions = styled(Box)(({ theme }) => ({
+  display: "flex",
+  alignItems: "center",
+  gap: theme.spacing(1),
+}));
+
 export const Header = ({ children }: HeaderProps): React.ReactElement => (
-  <StyledAppBar position="sticky">
+  <StyledAppBar position="sticky" elevation={0}>
     <Container maxWidth="lg">
-      <Toolbar
-        disableGutters
-        sx={{ minHeight: "64px", justifyContent: "space-between" }}
-      >
-				<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <img
-            src="/logo.svg"
-            alt="Sub Manager"
-            style={{ height: 36, width: 36 }}
-          />
-          <Subtitle
-            variant="h6"
-            component="span"
-            sx={{ fontWeight: 700, letterSpacing: "-0.5px", color: 'text.primary' }}
-          >
+      <StyledToolbar disableGutters>
+        <LogoContainer>
+          <LogoIcon src="/logo.svg" alt="Sub Manager" />
+          <LogoText variant="h6" component="span">
             Sub Manager
-          </Subtitle>
-        </Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          </LogoText>
+        </LogoContainer>
+        <HeaderActions>
           {children}
           <ThemeToggle />
-        </Box>
-      </Toolbar>
+        </HeaderActions>
+      </StyledToolbar>
     </Container>
   </StyledAppBar>
 );

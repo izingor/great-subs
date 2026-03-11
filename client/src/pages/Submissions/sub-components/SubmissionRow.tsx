@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { TableRow, TableCell, Chip, IconButton, Button, CircularProgress } from '@mui/material'
+import { TableRow, TableCell, Chip, IconButton, Button, CircularProgress, styled } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
 import EditIcon from '@mui/icons-material/Edit'
@@ -21,6 +21,41 @@ const STATUS_LABEL: Record<SubmissionStatus, string> = {
 	bound: 'Bound',
 	bind_failed: 'Failed',
 }
+
+const StyledTableRow = styled(TableRow)({
+	'&:last-child td, &:last-child th': { border: 0 },
+})
+
+const ResponsiveTableCell = styled(TableCell)(({ theme }) => ({
+	display: 'none',
+	[theme.breakpoints.up('sm')]: {
+		display: 'table-cell',
+	},
+}))
+
+const TableRowTitle = styled(H4)({
+	fontSize: '1rem',
+})
+
+const DateText = styled(Subtitle)({
+	fontSize: '0.875rem',
+})
+
+const ConfirmActionGroup = styled('div')({
+	display: 'flex',
+	alignItems: 'center',
+	justifyContent: 'flex-end',
+	gap: '8px',
+})
+
+const DefaultActionGroup = styled('div')<{ isHovered: boolean }>(({ isHovered }) => ({
+	display: 'flex',
+	alignItems: 'center',
+	justifyContent: 'flex-end',
+	opacity: isHovered ? 1 : 0,
+	transition: 'opacity 0.2s',
+	gap: '4px',
+}))
 
 type SubmissionRowProps = {
 	readonly submission: Submission
@@ -102,16 +137,15 @@ export const SubmissionRow = ({ submission, onEdit }: SubmissionRowProps): React
 	})
 
 	return (
-		<TableRow
+		<StyledTableRow
 			hover
 			onMouseEnter={() => setIsHovered(true)}
 			onMouseLeave={() => setIsHovered(false)}
-			sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
 		>
 			<TableCell component='th' scope='row'>
-				<H4 sx={{ fontSize: '1rem' }}>
+				<TableRowTitle>
 					{submission.name}
-				</H4>
+				</TableRowTitle>
 			</TableCell>
 			<TableCell>
 				<Chip
@@ -120,33 +154,33 @@ export const SubmissionRow = ({ submission, onEdit }: SubmissionRowProps): React
 					size='small'
 				/>
 			</TableCell>
-			<TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
-				<Subtitle sx={{ fontSize: '0.875rem' }}>
+			<ResponsiveTableCell>
+				<DateText>
 					{formattedDate}
-				</Subtitle>
-			</TableCell>
+				</DateText>
+			</ResponsiveTableCell>
 			<TableCell>{renderBindButton()}</TableCell>
 			<TableCell align='right'>
 				{showDeleteConfirm ? (
-					<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
+					<ConfirmActionGroup>
 						<Button variant='contained' color='error' size='small' onClick={handleDelete} disabled={isDeleting}>
 							{isDeleting ? <CircularProgress size={16} color='inherit' /> : 'Confirm'}
 						</Button>
 						<Button variant='text' size='small' onClick={() => setShowDeleteConfirm(false)}>
 							Cancel
 						</Button>
-					</div>
+					</ConfirmActionGroup>
 				) : (
-					<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', opacity: isHovered ? 1 : 0, transition: 'opacity 0.2s', gap: '4px' }}>
+					<DefaultActionGroup isHovered={isHovered}>
 						<IconButton size='small' onClick={() => onEdit(submission)}>
 							<EditIcon fontSize='small' />
 						</IconButton>
 						<IconButton size='small' color='error' onClick={() => setShowDeleteConfirm(true)}>
 							<DeleteIcon fontSize='small' />
 						</IconButton>
-					</div>
+					</DefaultActionGroup>
 				)}
 			</TableCell>
-		</TableRow>
+		</StyledTableRow>
 	)
 }

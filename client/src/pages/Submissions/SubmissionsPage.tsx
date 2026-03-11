@@ -1,29 +1,37 @@
-import { useState, useMemo } from 'react'
-import { Container, Box, Button, TextField, Select, MenuItem, InputAdornment, IconButton, Stack } from '@mui/material'
+import { useState } from 'react'
+import { Box, Button, styled } from '@mui/material'
 import { H4, Subtitle } from '@/components/typography/Typography'
+import { PageContainer, PageHeader } from '@/components/layouts/PageLayout'
 import AddIcon from '@mui/icons-material/Add'
-import SearchIcon from '@mui/icons-material/Search'
-import CloseIcon from '@mui/icons-material/Close'
 import { useGetSubmissionsQuery } from '@/store/api'
 import { SubmissionList } from './sub-components/SubmissionList'
 import { SubmissionForm } from './sub-components/SubmissionForm'
-import type { Submission } from '@/types/submission'
+import { SubmissionFilters, ALL_STATUSES } from './sub-components/SubmissionFilters'
+import type { Submission, SubmissionsFilter } from '@/types/submission'
 
-const ALL_STATUSES = 'all'
+const PageTitle = styled(H4)(({ theme }) => ({
+	marginBottom: theme.spacing(0.5),
+}))
+
+const HeaderAction = styled(Button)(({ theme }) => ({
+	alignSelf: 'flex-start',
+	[theme.breakpoints.up('sm')]: {
+		alignSelf: 'auto',
+	},
+}))
 
 export const SubmissionsPage = (): React.ReactElement => {
-	const [statusFilter, setStatusFilter] = useState(ALL_STATUSES)
-	const [searchQuery, setSearchQuery] = useState('')
+	const [filters, setFilters] = useState<SubmissionsFilter>({
+		status: ALL_STATUSES,
+		search: '',
+	})
 	const [formOpen, setFormOpen] = useState(false)
 	const [editingSubmission, setEditingSubmission] = useState<Submission | undefined>()
 
-	const queryParams = useMemo(
-		() => ({
-			...(statusFilter !== ALL_STATUSES && { status: statusFilter }),
-			...(searchQuery && { name: searchQuery }),
-		}),
-		[statusFilter, searchQuery],
-	)
+	const queryParams = {
+		...(filters.status !== ALL_STATUSES && { status: filters.status }),
+		...(filters.search && { name: filters.search }),
+	}
 
 	const { data: submissions, isLoading } = useGetSubmissionsQuery(queryParams)
 
@@ -42,59 +50,23 @@ export const SubmissionsPage = (): React.ReactElement => {
 		setEditingSubmission(undefined)
 	}
 
-	const clearSearch = (): void => setSearchQuery('')
-
 	return (
-		<Container maxWidth='lg' sx={{ py: 4 }}>
-			<Box sx={{ mb: 4, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { sm: 'flex-end' }, justifyContent: 'space-between', gap: 2 }}>
+		<PageContainer maxWidth='lg'>
+			<PageHeader>
 				<Box>
-					<H4 component='h2' sx={{ mb: 0.5 }}>
+					<PageTitle component='h2'>
 						Submissions
-					</H4>
+					</PageTitle>
 					<Subtitle>
 						Manage and bind your insurance submissions
 					</Subtitle>
 				</Box>
-				<Button variant='contained' startIcon={<AddIcon />} onClick={openCreateForm} sx={{ alignSelf: { xs: 'flex-start', sm: 'auto' } }}>
+				<HeaderAction variant='contained' startIcon={<AddIcon />} onClick={openCreateForm}>
 					New Submission
-				</Button>
-			</Box>
+				</HeaderAction>
+			</PageHeader>
 
-			<Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 3 }}>
-				<Select
-					value={statusFilter}
-					onChange={(e) => setStatusFilter(e.target.value)}
-					size='small'
-					sx={{ width: { xs: '100%', sm: 180 } }}
-				>
-					<MenuItem value={ALL_STATUSES}>All statuses</MenuItem>
-					<MenuItem value='new'>New</MenuItem>
-					<MenuItem value='bound'>Bound</MenuItem>
-					<MenuItem value='bind_failed'>Failed</MenuItem>
-				</Select>
-
-				<TextField
-					placeholder='Search by name…'
-					value={searchQuery}
-					onChange={(e) => setSearchQuery(e.target.value)}
-					size='small'
-					fullWidth
-					InputProps={{
-						startAdornment: (
-							<InputAdornment position='start'>
-								<SearchIcon fontSize='small' />
-							</InputAdornment>
-						),
-						endAdornment: searchQuery ? (
-							<InputAdornment position='end'>
-								<IconButton size='small' onClick={clearSearch} edge='end'>
-									<CloseIcon fontSize='small' />
-								</IconButton>
-							</InputAdornment>
-						) : null,
-					}}
-				/>
-			</Stack>
+			<SubmissionFilters filters={filters} onFilterChange={setFilters} />
 
 			<SubmissionList submissions={submissions} isLoading={isLoading} onEdit={openEditForm} />
 
@@ -104,6 +76,6 @@ export const SubmissionsPage = (): React.ReactElement => {
 				onClose={closeForm}
 				submission={editingSubmission}
 			/>
-		</Container>
+		</PageContainer>
 	)
 }

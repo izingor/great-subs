@@ -23,3 +23,8 @@ export type BindResponse = {
 	readonly submission: Submission
 	readonly attempts: number
 }
+
+export type SubmissionsFilter = {
+	readonly status: string
+	readonly search: string
+}
