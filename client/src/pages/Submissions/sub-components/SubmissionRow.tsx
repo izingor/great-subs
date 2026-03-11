@@ -1,16 +1,19 @@
 import { useState } from 'react'
-import { Loader2, CheckCircle2, XCircle, Pencil, Trash2, Zap } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { TableRow, TableCell } from '@/components/ui/table'
+import { TableRow, TableCell, Chip, IconButton, Button, CircularProgress } from '@mui/material'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import CancelIcon from '@mui/icons-material/Cancel'
+import EditIcon from '@mui/icons-material/Edit'
+import DeleteIcon from '@mui/icons-material/Delete'
+import BoltIcon from '@mui/icons-material/Bolt'
 import { useBindSubmissionMutation, useDeleteSubmissionMutation } from '@/store/api'
 import type { Submission, SubmissionStatus } from '@/types/submission'
-import { toast } from 'sonner'
+import { toast } from 'react-toastify'
+import { H4, Subtitle } from '@/components/typography/Typography'
 
-const STATUS_VARIANT: Record<SubmissionStatus, 'default' | 'secondary' | 'destructive'> = {
+const STATUS_COLOR: Record<SubmissionStatus, 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'> = {
 	new: 'default',
-	bound: 'secondary',
-	bind_failed: 'destructive',
+	bound: 'success',
+	bind_failed: 'error',
 }
 
 const STATUS_LABEL: Record<SubmissionStatus, string> = {
@@ -29,6 +32,7 @@ export const SubmissionRow = ({ submission, onEdit }: SubmissionRowProps): React
 		useBindSubmissionMutation({ fixedCacheKey: `bind-${submission.id}` })
 	const [deleteSubmission, { isLoading: isDeleting }] = useDeleteSubmissionMutation()
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+	const [isHovered, setIsHovered] = useState(false)
 
 	const handleBind = async (): Promise<void> => {
 		try {
@@ -52,31 +56,41 @@ export const SubmissionRow = ({ submission, onEdit }: SubmissionRowProps): React
 	const renderBindButton = (): React.ReactElement => {
 		if (submission.status === 'bound' || isBound) {
 			return (
-				<Badge variant='secondary' className='gap-1'>
-					<CheckCircle2 className='h-3 w-3' /> Bound
-				</Badge>
+				<Chip
+					icon={<CheckCircleIcon fontSize='small' />}
+					label='Bound'
+					color='success'
+					variant='outlined'
+					size='small'
+				/>
 			)
 		}
 
 		if (isBindError) {
 			return (
-				<Button variant='destructive' size='sm' onClick={handleBind} className='gap-1'>
-					<XCircle className='h-3.5 w-3.5' /> Retry
+				<Button
+					variant='outlined'
+					color='error'
+					size='small'
+					startIcon={<CancelIcon />}
+					onClick={handleBind}
+				>
+					Retry
 				</Button>
 			)
 		}
 
 		if (isBinding) {
 			return (
-				<Button variant='secondary' size='sm' disabled className='gap-1'>
-					<Loader2 className='h-3.5 w-3.5 animate-spin' /> Binding…
+				<Button variant='outlined' color='inherit' size='small' disabled startIcon={<CircularProgress size={16} />}>
+					Binding…
 				</Button>
 			)
 		}
 
 		return (
-			<Button variant='default' size='sm' onClick={handleBind} className='gap-1'>
-				<Zap className='h-3.5 w-3.5' /> Bind
+			<Button variant='contained' color='primary' size='small' onClick={handleBind} startIcon={<BoltIcon />}>
+				Bind
 			</Button>
 		)
 	}
@@ -88,47 +102,50 @@ export const SubmissionRow = ({ submission, onEdit }: SubmissionRowProps): React
 	})
 
 	return (
-		<TableRow className='group'>
-			<TableCell className='font-medium'>{submission.name}</TableCell>
-			<TableCell>
-				<Badge variant={STATUS_VARIANT[submission.status as SubmissionStatus]}>
-					{STATUS_LABEL[submission.status as SubmissionStatus] ?? submission.status}
-				</Badge>
+		<TableRow
+			hover
+			onMouseEnter={() => setIsHovered(true)}
+			onMouseLeave={() => setIsHovered(false)}
+			sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+		>
+			<TableCell component='th' scope='row'>
+				<H4 sx={{ fontSize: '1rem' }}>
+					{submission.name}
+				</H4>
 			</TableCell>
-			<TableCell className='hidden sm:table-cell text-muted-foreground'>{formattedDate}</TableCell>
+			<TableCell>
+				<Chip
+					label={STATUS_LABEL[submission.status as SubmissionStatus] ?? submission.status}
+					color={STATUS_COLOR[submission.status as SubmissionStatus]}
+					size='small'
+				/>
+			</TableCell>
+			<TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+				<Subtitle sx={{ fontSize: '0.875rem' }}>
+					{formattedDate}
+				</Subtitle>
+			</TableCell>
 			<TableCell>{renderBindButton()}</TableCell>
-			<TableCell className='text-right'>
-				<div className='flex items-center justify-end gap-1'>
-					{showDeleteConfirm ? (
-						<>
-							<Button variant='destructive' size='sm' onClick={handleDelete} disabled={isDeleting}>
-								{isDeleting ? <Loader2 className='h-3.5 w-3.5 animate-spin' /> : 'Confirm'}
-							</Button>
-							<Button variant='ghost' size='sm' onClick={() => setShowDeleteConfirm(false)}>
-								Cancel
-							</Button>
-						</>
-					) : (
-						<>
-							<Button
-								variant='ghost'
-								size='icon'
-								className='h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity'
-								onClick={() => onEdit(submission)}
-							>
-								<Pencil className='h-4 w-4' />
-							</Button>
-							<Button
-								variant='ghost'
-								size='icon'
-								className='h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive'
-								onClick={() => setShowDeleteConfirm(true)}
-							>
-								<Trash2 className='h-4 w-4' />
-							</Button>
-						</>
-					)}
-				</div>
+			<TableCell align='right'>
+				{showDeleteConfirm ? (
+					<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
+						<Button variant='contained' color='error' size='small' onClick={handleDelete} disabled={isDeleting}>
+							{isDeleting ? <CircularProgress size={16} color='inherit' /> : 'Confirm'}
+						</Button>
+						<Button variant='text' size='small' onClick={() => setShowDeleteConfirm(false)}>
+							Cancel
+						</Button>
+					</div>
+				) : (
+					<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', opacity: isHovered ? 1 : 0, transition: 'opacity 0.2s', gap: '4px' }}>
+						<IconButton size='small' onClick={() => onEdit(submission)}>
+							<EditIcon fontSize='small' />
+						</IconButton>
+						<IconButton size='small' color='error' onClick={() => setShowDeleteConfirm(true)}>
+							<DeleteIcon fontSize='small' />
+						</IconButton>
+					</div>
+				)}
 			</TableCell>
 		</TableRow>
 	)

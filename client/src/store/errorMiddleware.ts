@@ -1,6 +1,6 @@
 import type { Middleware } from '@reduxjs/toolkit'
 import { isRejectedWithValue } from '@reduxjs/toolkit'
-import { toast } from 'sonner'
+import { toast } from 'react-toastify'
 
 const HTTP_ERROR_MESSAGES: Record<number, string> = {
 	400: 'Invalid request. Please check your input.',

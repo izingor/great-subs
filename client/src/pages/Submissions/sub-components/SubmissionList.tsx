@@ -1,8 +1,8 @@
-import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Loader2, Inbox } from 'lucide-react'
-import { Subtitle } from '@/components/typography/Typography'
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress, Box } from '@mui/material'
+import InboxIcon from '@mui/icons-material/Inbox'
 import type { Submission } from '@/types/submission'
 import { SubmissionRow } from './SubmissionRow'
+import { Subtitle } from '@/components/typography/Typography'
 
 type SubmissionListProps = {
 	readonly submissions: Submission[] | undefined
@@ -13,40 +13,40 @@ type SubmissionListProps = {
 export const SubmissionList = ({ submissions, isLoading, onEdit }: SubmissionListProps): React.ReactElement => {
 	if (isLoading) {
 		return (
-			<div className='flex flex-col items-center justify-center py-16 text-muted-foreground'>
-				<Loader2 className='h-8 w-8 animate-spin mb-3' />
+			<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 8 }}>
+				<CircularProgress sx={{ mb: 2 }} />
 				<Subtitle>Loading submissions…</Subtitle>
-			</div>
+			</Box>
 		)
 	}
 
 	if (!submissions?.length) {
 		return (
-			<div className='flex flex-col items-center justify-center py-16 text-muted-foreground'>
-				<Inbox className='h-12 w-12 mb-3 opacity-50' />
+			<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 8 }}>
+				<InboxIcon sx={{ fontSize: 48, mb: 2, opacity: 0.5, color: 'text.secondary' }} />
 				<Subtitle>No submissions found</Subtitle>
-			</div>
+			</Box>
 		)
 	}
 
 	return (
-		<div className='rounded-lg border bg-card'>
-			<Table>
-				<TableHeader>
+		<TableContainer component={Paper} variant='outlined'>
+			<Table sx={{ minWidth: 650 }}>
+				<TableHead>
 					<TableRow>
-						<TableHead className='w-[35%]'>Name</TableHead>
-						<TableHead className='w-[15%]'>Status</TableHead>
-						<TableHead className='hidden sm:table-cell w-[20%]'>Created</TableHead>
-						<TableHead className='w-[15%]'>Action</TableHead>
-						<TableHead className='w-[15%] text-right'>Options</TableHead>
+						<TableCell width='35%'>Name</TableCell>
+						<TableCell width='15%'>Status</TableCell>
+						<TableCell width='20%' sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Created</TableCell>
+						<TableCell width='15%'>Action</TableCell>
+						<TableCell width='15%' align='right'>Options</TableCell>
 					</TableRow>
-				</TableHeader>
+				</TableHead>
 				<TableBody>
 					{submissions.map((submission) => (
 						<SubmissionRow key={submission.id} submission={submission} onEdit={onEdit} />
 					))}
 				</TableBody>
 			</Table>
-		</div>
+		</TableContainer>
 	)
 }

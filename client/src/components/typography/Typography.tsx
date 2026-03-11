@@ -1,39 +1,63 @@
-import type { HTMLAttributes, ReactNode } from 'react'
-import { cn } from '@/lib/utils'
+import { styled, Typography, type TypographyProps } from "@mui/material";
 
-type TypographyProps = HTMLAttributes<HTMLElement> & {
-	readonly children: ReactNode
-}
+export const H1 = styled(
+  (props: TypographyProps) => <Typography variant="h1" component="h1" {...props} />
+)(({ theme }) => ({
+  fontSize: "2.25rem",
+  fontWeight: 800,
+  letterSpacing: "-0.05em",
+  lineHeight: 1.2,
+  [theme.breakpoints.up("lg")]: {
+    fontSize: "3rem",
+  },
+}));
 
-export const H1 = ({ className, children, ...props }: TypographyProps): React.ReactElement => (
-	<h1 className={cn('scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl', className)} {...props}>
-		{children}
-	</h1>
-)
+export const H2 = styled(
+  (props: TypographyProps) => <Typography variant="h2" component="h2" {...props} />
+)(({ theme }) => ({
+  fontSize: "1.875rem",
+  fontWeight: 600,
+  letterSpacing: "-0.025em",
+  lineHeight: 1.25,
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  paddingBottom: theme.spacing(1),
+  "&:first-of-type": {
+    marginTop: 0,
+  },
+}));
 
-export const H2 = ({ className, children, ...props }: TypographyProps): React.ReactElement => (
-	<h2
-		className={cn('scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0', className)}
-		{...props}
-	>
-		{children}
-	</h2>
-)
+export const H3 = styled(
+  (props: TypographyProps) => <Typography variant="h3" component="h3" {...props} />
+)(() => ({
+  fontSize: "1.5rem",
+  fontWeight: 600,
+  letterSpacing: "-0.025em",
+  lineHeight: 1.3,
+}));
 
-export const H3 = ({ className, children, ...props }: TypographyProps): React.ReactElement => (
-	<h3 className={cn('scroll-m-20 text-2xl font-semibold tracking-tight', className)} {...props}>
-		{children}
-	</h3>
-)
+export const H4 = styled(
+  (props: TypographyProps) => <Typography variant="h4" component="h4" {...props} />
+)(() => ({
+  fontSize: "1.25rem",
+  fontWeight: 600,
+  letterSpacing: "-0.025em",
+  lineHeight: 1.4,
+}));
 
-export const P = ({ className, children, ...props }: TypographyProps): React.ReactElement => (
-	<p className={cn('leading-7 [&:not(:first-child)]:mt-6', className)} {...props}>
-		{children}
-	</p>
-)
+export const P = styled(
+  (props: TypographyProps) => <Typography variant="body1" component="p" {...props} />
+)(({ theme }) => ({
+  fontSize: "1rem",
+  lineHeight: 1.75,
+  "&:not(:first-of-type)": {
+    marginTop: theme.spacing(3),
+  },
+}));
 
-export const Subtitle = ({ className, children, ...props }: TypographyProps): React.ReactElement => (
-	<p className={cn('text-lg text-muted-foreground', className)} {...props}>
-		{children}
-	</p>
-)
+export const Subtitle = styled(
+  (props: TypographyProps) => <Typography variant="h6" component="p" {...props} />
+)(({ theme }) => ({
+  fontSize: "1.125rem",
+  lineHeight: 1.75,
+  color: theme.palette.text.secondary,
+}));

@@ -1,21 +1,11 @@
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-	DialogFooter,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogActions, Button, TextField, CircularProgress } from '@mui/material'
+import { H4, P } from '@/components/typography/Typography'
 import { useCreateSubmissionMutation, useUpdateSubmissionMutation } from '@/store/api'
 import type { Submission } from '@/types/submission'
-import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
+import { toast } from 'react-toastify'
 
 const submissionSchema = z.object({
 	name: z.string().min(1, 'Name is required'),
@@ -36,7 +26,7 @@ export const SubmissionForm = ({ open, onClose, submission }: SubmissionFormProp
 	const isSubmitting = isCreating || isUpdating
 
 	const {
-		register,
+		control,
 		handleSubmit,
 		reset,
 		formState: { errors },
@@ -51,53 +41,57 @@ export const SubmissionForm = ({ open, onClose, submission }: SubmissionFormProp
 				? await updateSubmission({ id: submission.id, data: values })
 				: await createSubmission(values)
 
-		if (result?.data) {
+		if ('data' in result) {
 			toast.success(isEditMode ? 'Submission updated successfully' : 'Submission created successfully')
 			reset()
 			onClose()
 		}
 	}
 
-	const handleOpenChange = (isOpen: boolean): void => {
-		if (!isOpen) {
-			reset()
-			onClose()
-		}
+	const handleClose = (): void => {
+		reset()
+		onClose()
 	}
 
 	return (
-		<Dialog open={open} onOpenChange={handleOpenChange}>
-			<DialogContent className='sm:max-w-md'>
-				<DialogHeader>
-					<DialogTitle>{isEditMode ? 'Edit Submission' : 'New Submission'}</DialogTitle>
-					<DialogDescription>
+		<Dialog open={open} onClose={handleClose} fullWidth maxWidth='sm'>
+			<H4 sx={{ px: 3, pt: 3, pb: 1 }}>{isEditMode ? 'Edit Submission' : 'New Submission'}</H4>
+			<form onSubmit={handleSubmit(onSubmit)}>
+				<DialogContent>
+					<P sx={{ mb: 2, mt: 0, color: 'text.secondary' }}>
 						{isEditMode
 							? 'Update the submission details below.'
 							: 'Fill in the details to create a new submission.'}
-					</DialogDescription>
-				</DialogHeader>
-				<form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
-					<div className='space-y-2'>
-						<Label htmlFor='name'>Name</Label>
-						<Input
-							id='name'
-							placeholder='Enter submission name'
-							{...register('name')}
-							aria-invalid={!!errors.name}
-						/>
-						{errors.name && <p className='text-sm text-destructive'>{errors.name.message}</p>}
-					</div>
-					<DialogFooter>
-						<Button type='button' variant='ghost' onClick={onClose} disabled={isSubmitting}>
-							Cancel
-						</Button>
-						<Button type='submit' disabled={isSubmitting}>
-							{isSubmitting && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
-							{isEditMode ? 'Update' : 'Create'}
-						</Button>
-					</DialogFooter>
-				</form>
-			</DialogContent>
+					</P>
+					
+					<Controller
+						name='name'
+						control={control}
+						render={({ field }) => (
+							<TextField
+								{...field}
+								autoFocus
+								margin='dense'
+								id='name'
+								label='Name'
+								type='text'
+								fullWidth
+								variant='outlined'
+								error={!!errors.name}
+								helperText={errors.name?.message}
+							/>
+						)}
+					/>
+				</DialogContent>
+				<DialogActions sx={{ px: 3, pb: 2 }}>
+					<Button onClick={handleClose} disabled={isSubmitting} color='inherit'>
+						Cancel
+					</Button>
+					<Button type='submit' variant='contained' disabled={isSubmitting} startIcon={isSubmitting ? <CircularProgress size={16} /> : null}>
+						{isEditMode ? 'Update' : 'Create'}
+					</Button>
+				</DialogActions>
+			</form>
 		</Dialog>
 	)
 }
