@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlmodel import Session, select, func
@@ -58,7 +58,7 @@ def update_submission(
     for key, value in update_data.items():
         setattr(submission, key, value)
 
-    submission.updated_at = datetime.utcnow()
+    submission.updated_at = datetime.now(timezone.utc)
     session.add(submission)
     session.commit()
     session.refresh(submission)

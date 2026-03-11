@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import update
@@ -116,7 +116,7 @@ async def bind_submission(
         log.info("Submission already bound — id=%d, skipping", submission_id)
         return {"submission": SubmissionRead.model_validate(submission), "attempts": 0}
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     lease_cutoff = now - timedelta(seconds=CLAIM_LEASE_SECONDS)
 
     stmt = (
@@ -159,7 +159,7 @@ async def bind_submission(
     session.refresh(submission)
     submission.status = final_status
     submission.claimed_at = None
-    submission.updated_at = datetime.utcnow()
+    submission.updated_at = datetime.now(timezone.utc)
     session.add(submission)
     session.commit()
     session.refresh(submission)
