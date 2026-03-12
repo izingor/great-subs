@@ -24,7 +24,7 @@ class SubmissionStatus(str, Enum):
 
 class Submission(SQLModel, table=True):
     id: Optional[UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
-    name: str = Field(index=True)
+    name: str = Field(index=True, unique=True)
     status: str = Field(default="new")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

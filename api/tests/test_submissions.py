@@ -1,11 +1,13 @@
 from fastapi.testclient import TestClient
-from sqlmodel import Session
+from sqlmodel import Session, select
 from models import Submission
 
 def test_create_submission(client: TestClient):
     response = client.post("/submissions/", json={"name": "Test Sub", "status": "new"})
     assert response.status_code == 201
-    data = response.json()
+    res_json = response.json()
+    assert "message" in res_json
+    data = res_json["data"]
     assert data["name"] == "Test Sub"
     assert data["status"] == "new"
     assert data["id"] is not None
@@ -57,8 +59,11 @@ def test_patch_submission(client: TestClient, session: Session):
 
     res = client.patch(f"/submissions/{sub.id}", json={"name": "Updated"})
     assert res.status_code == 200
-    assert res.json()["name"] == "Updated"
-    assert res.json()["status"] == "new"
+    res_json = res.json()
+    assert "message" in res_json
+    data = res_json["data"]
+    assert data["name"] == "Updated"
+    assert data["status"] == "new"
 
 def test_delete_submission(client: TestClient, session: Session):
     sub = Submission(name="To Delete", status="new")
@@ -67,7 +72,31 @@ def test_delete_submission(client: TestClient, session: Session):
     session.refresh(sub)
 
     res = client.delete(f"/submissions/{sub.id}")
-    assert res.status_code == 204
+    assert res.status_code == 200
+    assert "message" in res.json()
 
     res2 = client.get(f"/submissions/{sub.id}")
     assert res2.status_code == 404
+
+
+def test_create_duplicate_submission(client: TestClient, session: Session):
+    session.add(Submission(name="Duplicate", status="new"))
+    session.commit()
+
+    response = client.post("/submissions/", json={"name": "Duplicate", "status": "new"})
+    assert response.status_code == 400
+    assert "already exists" in response.json()["detail"]
+
+
+def test_patch_duplicate_submission(client: TestClient, session: Session):
+    session.add(Submission(name="Existing 1", status="new"))
+    session.add(Submission(name="Existing 2", status="new"))
+    session.commit()
+
+    # Find ID of Existing 2 to try to rename it to Existing 1
+    sub2 = session.exec(select(Submission).where(Submission.name == "Existing 2")).one()
+
+    response = client.patch(f"/submissions/{sub2.id}", json={"name": "Existing 1"})
+    assert response.status_code == 400
+    assert "already exists" in response.json()["detail"]
+

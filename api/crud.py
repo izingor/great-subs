@@ -36,6 +36,12 @@ def get_submission(session: Session, submission_id: UUID) -> Optional[Submission
     return session.get(Submission, submission_id)
 
 
+def get_submission_by_name(session: Session, name: str) -> Optional[Submission]:
+    """Return a single submission by name, or None."""
+    statement = select(Submission).where(Submission.name == name)
+    return session.exec(statement).first()
+
+
 def create_submission(session: Session, data: SubmissionCreate) -> Submission:
     """Insert a new submission and return it."""
     submission = Submission.model_validate(data)

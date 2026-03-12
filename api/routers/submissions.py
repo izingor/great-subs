@@ -10,6 +10,7 @@ from crud import (
     create_submission,
     delete_submission,
     get_submission,
+    get_submission_by_name,
     get_submissions,
     update_submission,
 )
@@ -44,6 +45,14 @@ def create_new_submission(
     session: Session = Depends(get_session),
 ):
     log.info("Creating submission — name=%s status=%s", data.name, data.status)
+    existing = get_submission_by_name(session, data.name)
+    if existing:
+        log.warning("Submission creation failed — name already exists: %s", data.name)
+        raise HTTPException(
+            status_code=400,
+            detail=f"A submission with the name \"{data.name}\" already exists."
+        )
+
     submission = create_submission(session, data)
     log.info("Submission created — id=%s", submission.id)
     return {
@@ -78,6 +87,15 @@ def patch_submission(
         submission_id,
         data.model_dump(exclude_unset=True),
     )
+    if data.name:
+        existing = get_submission_by_name(session, data.name)
+        if existing and existing.id != submission_id:
+            log.warning("Submission update failed — name already exists: %s", data.name)
+            raise HTTPException(
+                status_code=400,
+                detail=f"A submission with the name \"{data.name}\" already exists."
+            )
+
     submission = update_submission(session, submission_id, data)
 
     if not submission:
