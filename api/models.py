@@ -1,6 +1,8 @@
+import uuid
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
+from uuid import UUID
 
 from pydantic import field_validator
 from sqlmodel import Field, SQLModel
@@ -21,7 +23,7 @@ class SubmissionStatus(str, Enum):
 # ---------------------------------------------------------------------------
 
 class Submission(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: Optional[UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(index=True)
     status: str = Field(default="new")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -34,12 +36,18 @@ class Submission(SQLModel, table=True):
 # ---------------------------------------------------------------------------
 
 class SubmissionRead(SQLModel):
-    id: int
+    id: UUID
     name: str
     status: str
     created_at: datetime
     updated_at: datetime
     claimed_at: Optional[datetime]
+
+class SuccessResponse(SQLModel):
+    message: str
+
+class ResponseWithData(SuccessResponse):
+    data: SQLModel
 
 class PaginatedSubmissions(SQLModel):
     items: list[SubmissionRead]
@@ -73,12 +81,3 @@ class SubmissionUpdate(SQLModel):
         if v not in allowed:
             raise ValueError(f"status must be one of {allowed}")
         return v
-
-
-class SubmissionRead(SQLModel):
-    id: int
-    name: str
-    status: str
-    created_at: datetime
-    updated_at: datetime
-    claimed_at: Optional[datetime]

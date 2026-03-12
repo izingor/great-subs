@@ -1,7 +1,7 @@
 export type SubmissionStatus = 'new' | 'bound' | 'bind_failed'
 
 export type Submission = {
-	readonly id: number
+	readonly id: string
 	readonly name: string
 	readonly status: SubmissionStatus
 	readonly created_at: string
@@ -19,9 +19,15 @@ export type SubmissionUpdatePayload = {
 	readonly status?: SubmissionStatus
 }
 
+export type MutationResponse<T> = {
+	readonly message: string
+	readonly data: T
+}
+
 export type BindResponse = {
 	readonly submission: Submission
 	readonly attempts: number
+	readonly message?: string
 }
 
 export type PaginatedSubmissions = {

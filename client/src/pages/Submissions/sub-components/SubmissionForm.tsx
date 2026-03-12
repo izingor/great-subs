@@ -16,7 +16,6 @@ import {
   useUpdateSubmissionMutation,
 } from "@/store/api";
 import type { Submission } from "@/types/submission";
-import { toast } from "react-toastify";
 
 const submissionSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -67,17 +66,12 @@ export const SubmissionForm = ({
   });
 
   const onSubmit = async (values: SubmissionFormValues): Promise<void> => {
-    const result =
+    const response =
       isEditMode && submission
         ? await updateSubmission({ id: submission.id, data: values })
         : await createSubmission(values);
 
-    if (result?.data) {
-      toast.success(
-        isEditMode
-          ? "Submission updated successfully"
-          : "Submission created successfully",
-      );
+    if (response?.data) {
       reset();
       onClose();
     }

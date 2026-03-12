@@ -14,8 +14,22 @@ const DEFAULT_ERROR_MESSAGE = 'An unexpected error occurred. Please try again.'
 
 export const errorMiddleware: Middleware = () => (next) => (action) => {
 	if (isRejectedWithValue(action)) {
-		const status = (action.payload as { status?: number })?.status
-		const message = (status && HTTP_ERROR_MESSAGES[status]) ?? DEFAULT_ERROR_MESSAGE
+		const payload = action.payload as { 
+			status?: number; 
+			data?: { detail?: string | { msg: string }[] } 
+		}
+		
+		let message = HTTP_ERROR_MESSAGES[payload.status ?? 0] ?? DEFAULT_ERROR_MESSAGE
+
+		if (payload.data?.detail) {
+			if (typeof payload.data.detail === 'string') {
+				message = payload.data.detail
+			} else if (Array.isArray(payload.data.detail) && payload.data.detail[0]?.msg) {
+				// Handle FastAPI validation errors
+				message = payload.data.detail[0].msg
+			}
+		}
+
 		toast.error(message)
 	}
 

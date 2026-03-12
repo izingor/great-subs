@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from typing import Optional
+from uuid import UUID
 
 from sqlmodel import Session, select, func
 
@@ -30,7 +31,7 @@ def get_submissions(
     return items, total
 
 
-def get_submission(session: Session, submission_id: int) -> Optional[Submission]:
+def get_submission(session: Session, submission_id: UUID) -> Optional[Submission]:
     """Return a single submission by id, or None."""
     return session.get(Submission, submission_id)
 
@@ -46,7 +47,7 @@ def create_submission(session: Session, data: SubmissionCreate) -> Submission:
 
 def update_submission(
     session: Session,
-    submission_id: int,
+    submission_id: UUID,
     data: SubmissionUpdate,
 ) -> Optional[Submission]:
     """Partially update a submission. Returns None if not found."""
@@ -65,7 +66,7 @@ def update_submission(
     return submission
 
 
-def delete_submission(session: Session, submission_id: int) -> bool:
+def delete_submission(session: Session, submission_id: UUID) -> bool:
     """Delete a submission. Returns True if deleted, False if not found."""
     submission = session.get(Submission, submission_id)
     if not submission:
