@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 from models import Submission
@@ -100,3 +102,46 @@ def test_patch_duplicate_submission(client: TestClient, session: Session):
     assert response.status_code == 400
     assert "already exists" in response.json()["detail"]
 
+def test_bind_submission_flow(client: TestClient, session: Session):
+    sub = Submission(name="Flow Test", status="new")
+    session.add(sub)
+    session.commit()
+    session.refresh(sub)
+
+    with patch("routers.submissions.call_bind_service", new_callable=AsyncMock) as mock_bind:
+        mock_bind.return_value = (True, 1)
+        
+        response = client.post(f"/submissions/{sub.id}/bind")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["submission"]["status"] == "bound"
+        assert data["attempts"] == 1
+        assert "bound successfully" in data["message"]
+
+def test_bind_submission_conflict(client: TestClient, session: Session):
+    sub = Submission(name="Conflict Test", status="new", claimed_at=datetime.now(timezone.utc))
+    session.add(sub)
+    session.commit()
+    session.refresh(sub)
+
+    response = client.post(f"/submissions/{sub.id}/bind")
+    assert response.status_code == 409
+    assert "being processed" in response.json()["detail"]
+
+def test_bind_submission_retry_failed(client: TestClient, session: Session):
+    sub = Submission(name="Retry Test", status="bind_failed")
+    session.add(sub)
+    session.commit()
+    session.refresh(sub)
+
+    with patch("routers.submissions.call_bind_service", new_callable=AsyncMock) as mock_bind:
+        mock_bind.return_value = (True, 1)
+        
+        response = client.post(f"/submissions/{sub.id}/bind")
+        assert response.status_code == 200
+        assert response.json()["submission"]["status"] == "bound"
+
+def test_bind_submission_not_found(client: TestClient):
+    import uuid
+    response = client.post(f"/submissions/{uuid.uuid4()}/bind")
+    assert response.status_code == 404

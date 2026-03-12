@@ -152,10 +152,11 @@ async def bind_submission(
         .where(Submission.id == submission_id)
         .where((Submission.status == "new") | (Submission.status == "bind_failed"))
         .where(
-            (Submission.claimed_at.is_(None))  
-            | (Submission.claimed_at < lease_cutoff) 
+            (Submission.claimed_at.is_(None))
+            | (Submission.claimed_at < lease_cutoff)
         )
         .values(claimed_at=now)
+        .execution_options(synchronize_session=False)
     )
 
     result = session.exec(stmt)
