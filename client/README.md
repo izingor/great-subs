@@ -1,73 +1,37 @@
-# React + TypeScript + Vite
+# Great Subs Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the frontend application for managing insurance submissions. It is a modern single-page application built with **React 19**, styled with **Material UI**, and powered by **Vite**.
 
-Currently, two official plugins are available:
+## Core Technologies
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **[React](https://react.dev/) (v19)**: The library for web and native user interfaces.
+- **[Vite](https://vitejs.dev/)**: Next Generation Frontend Tooling for extremely fast hot module replacement and building.
+- **[TypeScript](https://www.typescriptlang.org/)**: Strongly typed programming language that builds on JavaScript, giving you better tooling at any scale.
+- **[Material UI](https://mui.com/) (v7)**: A comprehensive suite of UI tools to help you ship new features faster. Used for all core styling, layouts, and components (leveraging `@emotion/styled`).
+- **[Redux Toolkit](https://redux-toolkit.js.org/) & [RTK Query](https://redux-toolkit.js.org/rtk-query/overview)**: The official, opinionated, batteries-included toolset for efficient Redux development. RTK Query is exclusively used for data fetching and caching API responses.
+- **[React Hook Form](https://react-hook-form.com/) & [Zod](https://zod.dev/)**: Performant, flexible and extensible forms with easy-to-use validation (Zod used for schema-based validation).
+- **[React Toastify](https://fkhadra.github.io/react-toastify/)**: Used in conjunction with Redux middleware to display global application notifications (success/error states).
 
-## React Compiler
+## Setup and Running
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-## Expanding the ESLint configuration
+2. Start the Vite development server:
+   ```bash
+   npm run dev
+   ```
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+The application will be accessible at `http://localhost:5173` (or the port specified by Vite). It expects the backend API to be running on `http://localhost:8000`.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Alternatively, you can run all services together from the root of the project using the provided `run.sh` script.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Project Structure
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- `src/components/`: Reusable UI components (buttons, inputs, layout elements).
+- `src/features/` or `src/pages/`: Page-level components and their specific sub-components (e.g., `Submissions/`).
+- `src/store/`: Redux store configuration, API slices (RTK Query), and global middlewares (error/success handling).
+- `src/types/`: Shared TypeScript interfaces and types.
+- `src/theme.ts`: Custom MUI theme configuration to apply consistent aesthetics.
