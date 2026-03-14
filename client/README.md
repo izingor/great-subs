@@ -20,23 +20,25 @@ The project follows a modular architecture using "barrel exports" (`index.ts` fi
 src/
 ├── components/          # Reusable UI components
 │   ├── Header/          # Main application header and theme controls
-│   ├── inputs/          # Custom form inputs (SearchInput, SelectBox, etc.)
+│   ├── inputs/          # Custom form inputs (SearchInput, SelectBox, buttons)
 │   ├── layouts/         # Layout-specific components (PageContainer, PageHeader, etc.)
 │   └── typography/      # Standardized typography components (H1, P, Subtitle, etc.)
-├── hooks/               # Custom React hooks
+├── hooks/               # Custom React hooks (useLocalStorage, etc.)
 ├── pages/               # Page-level components
 │   └── Submissions/     # Submissions management page and its sub-components
-├── providers/           # Context providers (Theme, Auth, etc.)
+├── providers/           # Context providers (ThemeProviderWrapper, etc.)
 ├── store/               # Redux state management
 │   ├── middlewares/     # Global middlewares (Error/Success handling)
-│   └── slices/          # RTK Query API slices and Redux slices
+│   └── slices/          # RTK Query API slices
+├── tests/               # Vitest component and unit tests
 ├── types/               # Split TypeScript definitions for all domain entities
-├── theme/               # Global MUI theme configuration and design tokens
+├── theme.ts             # Global MUI theme configuration and design tokens
 ├── Shell.tsx            # Root application shell (Context providers, Global styles)
-└── App.tsx              # Main entry point and routing
+└── App.tsx              # Main entry point rendering the app structure
 ```
 
 ### Key Import Patterns
+
 We use absolute path aliases (defined in `tsconfig.json`) and barrel exports to keep imports concise:
 
 - **Good**: `import { Button, H1 } from "@/components"`
@@ -45,26 +47,25 @@ We use absolute path aliases (defined in `tsconfig.json`) and barrel exports to 
 ## Architectural Decisions
 
 ### 1. Modular Type Declarations
+
 Instead of one massive `types.ts` file, types are split into domain-specific files within `src/types/` (e.g., `submission.ts`, `submission-status.ts`) and re-exported through a central `index.ts`. This improves maintainability and linting performance.
 
 ### 2. Global Notification Middleware
+
 The application uses custom Redux middlewares (`errorMiddleware` and `successMiddleware`) located in `src/store/middlewares/`. These intercept RTK Query mutations to automatically trigger `react-toastify` notifications, ensuring consistent UX without manual error handling in every component.
 
 ### 3. Styled System
+
 Styling is strictly enforced using MUI's `styled` API. We avoid inline styles and generic CSS files in favor of a theme-derived typed system. This ensures that spacing, colors, and typography always align with the design system.
 
 ### 4. Optimistic UI Updates
+
 For standard CRUD operations (Create, Update, Delete), we utilize Redux Toolkit's `onQueryStarted` to manually update the local RTK cache. This provides an immediate, snappy UX by bypassing the need to wait for the server's full response or a complete cache invalidation.
-
-### 5. Reusable Component & Thematic System
-All interactive elements like Buttons (`Primary`, `Secondary`, `Ghost`) and form inputs (`SearchInput`, `SelectBox`) are abstracted into highly reusable generic components. They strictly inherit from the custom MUI theme for unified aesthetic control.
-
-### 6. Accessible Advanced Data Table
-The main submission list features interactive column sorting, real-time filtering, and maintains strict accessibility standards (e.g., proper `aria-hidden` management on overlays/modals).
 
 ## Setup and Running
 
 1. **Install dependencies**:
+
    ```bash
    npm install
    ```
@@ -74,13 +75,12 @@ The main submission list features interactive column sorting, real-time filterin
    npm run dev
    ```
 
-The application will be accessible at `http://localhost:5173`. It expects the backend API to be running on `http://localhost:8000` (configurable via `.env`).
+The application will be accessible at `http://localhost:5173`. It expects the backend API to be running on `http://localhost:8000` (configurable via backend settings).
 
 ## Testing
 
 The project uses **Vitest** for unit and component testing.
 
 - **Run tests**: `npm run test`
-- **Run tests with UI**: `npm run test:ui`
 
 Tests are located in `src/tests/` and use `@testing-library/react` for component validation.
