@@ -2,6 +2,6 @@ __pycache__/
 venv/
 .env
 
-/api/database.db
+database.db
 
 .pytest_cache
