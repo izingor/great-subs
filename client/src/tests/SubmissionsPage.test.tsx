@@ -1,10 +1,10 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { SubmissionsPage } from "../pages/Submissions/SubmissionsPage";
+import { SubmissionsPage } from "@/pages";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
-import { submissionsApi } from "../store/slices/api";
+import { submissionsApi } from "@/store";
 import { ThemeProvider } from "@mui/material/styles";
 import { createTheme } from "@mui/material";
 
