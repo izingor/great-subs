@@ -6,9 +6,9 @@ import type {
   Submission,
   SubmissionCreatePayload,
   SubmissionUpdatePayload,
-} from "@/types/submission";
+} from "@/types";
 
-const BASE_URL = "http://localhost:8000";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export const submissionsApi = createApi({
   reducerPath: "submissionsApi",
@@ -36,7 +36,10 @@ export const submissionsApi = createApi({
       providesTags: ["Submission"],
     }),
 
-    createSubmission: builder.mutation<MutationResponse<Submission>, SubmissionCreatePayload>({
+    createSubmission: builder.mutation<
+      MutationResponse<Submission>,
+      SubmissionCreatePayload
+    >({
       query: (body) => ({
         url: "/submissions/",
         method: "POST",
@@ -46,23 +49,32 @@ export const submissionsApi = createApi({
         try {
           const { data: response } = await queryFulfilled;
           const newSubmission = response.data;
-          
+
           const state = getState() as any;
           const apiState = state.submissionsApi;
-          
+
           Object.values(apiState.queries || {}).forEach((query: any) => {
-            if (query?.endpointName === 'getSubmissions') {
+            if (query?.endpointName === "getSubmissions") {
               dispatch(
-                submissionsApi.util.updateQueryData('getSubmissions', query.originalArgs, (draft: any) => {
-                  // Only add to the first page if we are on the first page or if it's not paginated
-                  if (!query.originalArgs?.page || query.originalArgs.page === 1) {
-                    draft.items.unshift(newSubmission);
-                    if (draft.items.length > (query.originalArgs?.size ?? 10)) {
-                      draft.items.pop();
+                submissionsApi.util.updateQueryData(
+                  "getSubmissions",
+                  query.originalArgs,
+                  (draft: any) => {
+                    // Only add to the first page if we are on the first page or if it's not paginated
+                    if (
+                      !query.originalArgs?.page ||
+                      query.originalArgs.page === 1
+                    ) {
+                      draft.items.unshift(newSubmission);
+                      if (
+                        draft.items.length > (query.originalArgs?.size ?? 10)
+                      ) {
+                        draft.items.pop();
+                      }
                     }
-                  }
-                  draft.total += 1;
-                })
+                    draft.total += 1;
+                  },
+                ),
               );
             }
           });
@@ -81,28 +93,39 @@ export const submissionsApi = createApi({
         method: "PATCH",
         body: data,
       }),
-      async onQueryStarted({ id, data }, { dispatch, queryFulfilled, getState }) {
+      async onQueryStarted(
+        { id, data },
+        { dispatch, queryFulfilled, getState },
+      ) {
         const state = getState() as any;
         const apiState = state.submissionsApi;
 
         // Optimistically update getSubmission
         const patchResult1 = dispatch(
-          submissionsApi.util.updateQueryData('getSubmission', id, (draft: any) => {
-            Object.assign(draft, data);
-          })
+          submissionsApi.util.updateQueryData(
+            "getSubmission",
+            id,
+            (draft: any) => {
+              Object.assign(draft, data);
+            },
+          ),
         );
 
         // Optimistically update getSubmissions list entries
         const patchesList: any[] = [];
         Object.values(apiState.queries || {}).forEach((query: any) => {
-          if (query?.endpointName === 'getSubmissions') {
+          if (query?.endpointName === "getSubmissions") {
             const patchResult = dispatch(
-              submissionsApi.util.updateQueryData('getSubmissions', query.originalArgs, (draft: any) => {
-                const item = draft.items.find((i: any) => i.id === id);
-                if (item) {
-                  Object.assign(item, data);
-                }
-              })
+              submissionsApi.util.updateQueryData(
+                "getSubmissions",
+                query.originalArgs,
+                (draft: any) => {
+                  const item = draft.items.find((i: any) => i.id === id);
+                  if (item) {
+                    Object.assign(item, data);
+                  }
+                },
+              ),
             );
             patchesList.push(patchResult);
           }
@@ -114,26 +137,36 @@ export const submissionsApi = createApi({
 
           // Update with actual data from server
           dispatch(
-            submissionsApi.util.updateQueryData('getSubmission', id, (draft: any) => {
-              Object.assign(draft, updatedSubmission);
-            })
+            submissionsApi.util.updateQueryData(
+              "getSubmission",
+              id,
+              (draft: any) => {
+                Object.assign(draft, updatedSubmission);
+              },
+            ),
           );
 
           Object.values(apiState.queries || {}).forEach((query: any) => {
-            if (query?.endpointName === 'getSubmissions') {
+            if (query?.endpointName === "getSubmissions") {
               dispatch(
-                submissionsApi.util.updateQueryData('getSubmissions', query.originalArgs, (draft: any) => {
-                  const index = draft.items.findIndex((i: any) => i.id === id);
-                  if (index !== -1) {
-                    draft.items[index] = updatedSubmission;
-                  }
-                })
+                submissionsApi.util.updateQueryData(
+                  "getSubmissions",
+                  query.originalArgs,
+                  (draft: any) => {
+                    const index = draft.items.findIndex(
+                      (i: any) => i.id === id,
+                    );
+                    if (index !== -1) {
+                      draft.items[index] = updatedSubmission;
+                    }
+                  },
+                ),
               );
             }
           });
         } catch {
           patchResult1.undo();
-          patchesList.forEach(p => p.undo());
+          patchesList.forEach((p) => p.undo());
         }
       },
     }),
@@ -150,15 +183,19 @@ export const submissionsApi = createApi({
 
         const patchesList: any[] = [];
         Object.values(apiState.queries || {}).forEach((query: any) => {
-          if (query?.endpointName === 'getSubmissions') {
+          if (query?.endpointName === "getSubmissions") {
             const patchResult = dispatch(
-              submissionsApi.util.updateQueryData('getSubmissions', query.originalArgs, (draft: any) => {
-                const index = draft.items.findIndex((i: any) => i.id === id);
-                if (index !== -1) {
-                  draft.items.splice(index, 1);
-                  draft.total -= 1;
-                }
-              })
+              submissionsApi.util.updateQueryData(
+                "getSubmissions",
+                query.originalArgs,
+                (draft: any) => {
+                  const index = draft.items.findIndex((i: any) => i.id === id);
+                  if (index !== -1) {
+                    draft.items.splice(index, 1);
+                    draft.total -= 1;
+                  }
+                },
+              ),
             );
             patchesList.push(patchResult);
           }
@@ -167,7 +204,7 @@ export const submissionsApi = createApi({
         try {
           await queryFulfilled;
         } catch {
-          patchesList.forEach(p => p.undo());
+          patchesList.forEach((p) => p.undo());
         }
       },
     }),
@@ -187,21 +224,31 @@ export const submissionsApi = createApi({
 
           // Update getSubmission
           dispatch(
-            submissionsApi.util.updateQueryData('getSubmission', id, (draft: any) => {
-              Object.assign(draft, updatedSubmission);
-            })
+            submissionsApi.util.updateQueryData(
+              "getSubmission",
+              id,
+              (draft: any) => {
+                Object.assign(draft, updatedSubmission);
+              },
+            ),
           );
 
           // Update getSubmissions
           Object.values(apiState.queries || {}).forEach((query: any) => {
-            if (query?.endpointName === 'getSubmissions') {
+            if (query?.endpointName === "getSubmissions") {
               dispatch(
-                submissionsApi.util.updateQueryData('getSubmissions', query.originalArgs, (draft: any) => {
-                  const index = draft.items.findIndex((i: any) => i.id === id);
-                  if (index !== -1) {
-                    draft.items[index] = updatedSubmission;
-                  }
-                })
+                submissionsApi.util.updateQueryData(
+                  "getSubmissions",
+                  query.originalArgs,
+                  (draft: any) => {
+                    const index = draft.items.findIndex(
+                      (i: any) => i.id === id,
+                    );
+                    if (index !== -1) {
+                      draft.items[index] = updatedSubmission;
+                    }
+                  },
+                ),
               );
             }
           });
@@ -211,21 +258,29 @@ export const submissionsApi = createApi({
 
           // Update getSubmission to failed status
           dispatch(
-            submissionsApi.util.updateQueryData('getSubmission', id, (draft: any) => {
-              draft.status = 'bind_failed';
-            })
+            submissionsApi.util.updateQueryData(
+              "getSubmission",
+              id,
+              (draft: any) => {
+                draft.status = "bind_failed";
+              },
+            ),
           );
 
           // Update getSubmissions list to failed status
           Object.values(apiState.queries || {}).forEach((query: any) => {
-            if (query?.endpointName === 'getSubmissions') {
+            if (query?.endpointName === "getSubmissions") {
               dispatch(
-                submissionsApi.util.updateQueryData('getSubmissions', query.originalArgs, (draft: any) => {
-                  const item = draft.items.find((i: any) => i.id === id);
-                  if (item) {
-                    item.status = 'bind_failed';
-                  }
-                })
+                submissionsApi.util.updateQueryData(
+                  "getSubmissions",
+                  query.originalArgs,
+                  (draft: any) => {
+                    const item = draft.items.find((i: any) => i.id === id);
+                    if (item) {
+                      item.status = "bind_failed";
+                    }
+                  },
+                ),
               );
             }
           });

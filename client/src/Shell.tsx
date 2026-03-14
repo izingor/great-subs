@@ -2,7 +2,7 @@ import { type ReactNode } from "react";
 import { ToastContainer } from "react-toastify";
 import { Provider } from "react-redux";
 import { store } from "@/store/store";
-import { ThemeProviderWrapper } from "@/components/providers/ThemeProviderWrapper";
+import { ThemeProviderWrapper } from "@/providers/ThemeProviderWrapper";
 import { useTheme } from "@mui/material/styles";
 import "react-toastify/dist/ReactToastify.css";
 

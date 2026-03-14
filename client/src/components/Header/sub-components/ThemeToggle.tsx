@@ -3,7 +3,7 @@ import { IconButton } from "@mui/material";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
 import { useTheme } from "@mui/material/styles";
-import { ColorModeContext } from "@/components/providers/ThemeProviderWrapper";
+import { ColorModeContext } from "@/providers";
 
 export const ThemeToggle = (): React.ReactElement => {
   const theme = useTheme();

@@ -1,7 +1,5 @@
-import { CustomSelectBox } from "@/components/inputs/CustomSelectBox";
-import { SearchInput } from "@/components/inputs/SearchInput";
-import { PageFilters } from "@/components/layouts/PageLayout";
-import type { SubmissionsFilter } from "@/types/submission";
+import { CustomSelectBox, SearchInput, PageFilters } from "@/components";
+import type { SubmissionsFilter } from "@/types";
 import React from "react";
 
 export const ALL_STATUSES = "all";

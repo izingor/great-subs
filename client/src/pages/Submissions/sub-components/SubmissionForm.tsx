@@ -10,12 +10,12 @@ import {
   CircularProgress,
   styled,
 } from "@mui/material";
-import { H4, P } from "@/components/typography/Typography";
+import { H4, P } from "@/components";
 import {
   useCreateSubmissionMutation,
   useUpdateSubmissionMutation,
-} from "@/store/api";
-import type { Submission } from "@/types/submission";
+} from "@/store";
+import type { Submission } from "@/types";
 
 const submissionSchema = z.object({
   name: z.string().min(1, "Name is required"),

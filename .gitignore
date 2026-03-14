@@ -3,3 +3,5 @@ venv/
 .env
 
 /api/database.db
+
+.pytest_cache

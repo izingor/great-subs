@@ -1,6 +1,6 @@
 import { Header } from "@/components/Header";
-import { SubmissionsPage } from "@/pages/Submissions/SubmissionsPage";
-import { Shell } from "@/components/Shell";
+import { SubmissionsPage } from "@/pages";
+import { Shell } from "@/Shell";
 
 const App = (): React.ReactElement => (
   <Shell>

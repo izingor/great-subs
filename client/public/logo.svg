@@ -14,7 +14,7 @@
       <stop offset="100%" stop-color="#0EAAB6" stop-opacity="0.3"/>
     </linearGradient>
     <filter id="glow">
-      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feGaussianBlur stdDeviation="2" result="blur"/>
       <feMerge>
         <feMergeNode in="blur"/>
         <feMergeNode in="SourceGraphic"/>
@@ -33,34 +33,33 @@
     </filter>
   </defs>
 
-  <!-- Background with subtle depth -->
-  <rect width="120" height="120" rx="26" fill="url(#bg)" filter="url(#innerShadow)"/>
+  <!-- Background -->
+  <rect width="120" height="120" rx="28" fill="url(#bg)" filter="url(#innerShadow)"/>
 
-  <!-- Subtle shine overlay -->
-  <path d="M0 26 C0 11.6, 11.6 0, 26 0 L94 0 C108.4 0, 120 11.6, 120 26 L120 55 C80 65, 40 45, 0 55Z" fill="white" opacity="0.08" />
+  <!-- Shine overlay -->
+  <path d="M0 28 C0 12.5, 12.5 0, 28 0 L92 0 C107.5 0, 120 12.5, 120 28 L120 55 C80 65, 40 45, 0 55Z" fill="white" opacity="0.08" />
 
-  <!-- Shadow S (depth layer) -->
-  <path
-    d="M74 28 C56 26, 36 32, 34 46 C32 58, 44 64, 56 67 C68 70, 86 74, 86 88 C86 100, 68 108, 48 106"
-    fill="none" stroke="#065A60" stroke-width="15" stroke-linecap="round" opacity="0.25"
-    transform="translate(1.5, 2)"
-  />
+  <!-- Man in Suit Silhouette -->
+  <g transform="translate(0, 4)">
+    <!-- Head -->
+    <circle cx="60" cy="38" r="15" fill="url(#sMain)" filter="url(#glow)"/>
+    
+    <!-- Shoulders / Suit Jacket -->
+    <path d="M15 110 C15 75, 35 65, 60 65 C85 65, 105 75, 105 110 L105 110 L15 110 Z" fill="url(#sMain)" filter="url(#glow)"/>
+    
+    <!-- Lapels cutout (The "V" shape) -->
+    <path d="M60 65 L35 110 L85 110 Z" fill="#0A8A94" opacity="0.35"/>
+    
+    <!-- Shirt (White V) -->
+    <path d="M60 65 L48 95 L72 95 Z" fill="white"/>
+    
+    <!-- Tie -->
+    <path d="M60 72 L56 78 L60 105 L64 78 Z" fill="#0EAAB6"/>
+    <!-- Tie knot -->
+    <path d="M57 72 L63 72 L62 77 L58 77 Z" fill="#0DA1AB"/>
+  </g>
 
-  <!-- Main S stroke -->
-  <path
-    d="M74 28 C56 26, 36 32, 34 46 C32 58, 44 64, 56 67 C68 70, 86 74, 86 88 C86 100, 68 108, 48 106"
-    fill="none" stroke="url(#sMain)" stroke-width="14" stroke-linecap="round" filter="url(#glow)"
-  />
-
-  <!-- Thin accent S (inner highlight) -->
-  <path
-    d="M74 28 C56 26, 36 32, 34 46 C32 58, 44 64, 56 67 C68 70, 86 74, 86 88 C86 100, 68 108, 48 106"
-    fill="none" stroke="url(#sAccent)" stroke-width="6" stroke-linecap="round"
-  />
-
-  <!-- Sparkle dots -->
-  <circle cx="80" cy="24" r="3.5" fill="white" opacity="0.85"/>
-  <circle cx="88" cy="32" r="2" fill="white" opacity="0.5"/>
-  <circle cx="42" cy="110" r="3.5" fill="white" opacity="0.85"/>
-  <circle cx="34" cy="102" r="2" fill="white" opacity="0.5"/>
+  <!-- Sparkle dots for premium look -->
+  <circle cx="95" cy="25" r="3.5" fill="white" opacity="0.7"/>
+  <circle cx="25" cy="95" r="2.5" fill="white" opacity="0.5"/>
 </svg>

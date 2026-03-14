@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import JSONResponse
 from sqlalchemy import update
 from sqlmodel import Session
 
@@ -199,9 +200,13 @@ async def bind_submission(
             submission_id,
             attempts,
         )
-        raise HTTPException(
+        return JSONResponse(
             status_code=502,
-            detail=f"Failed to bind \"{submission.name}\" after {attempts} attempts. Please retry later.",
+            content={
+                "submission": SubmissionRead.model_validate(submission).model_dump(mode="json"),
+                "attempts": attempts,
+                "message": f"Failed to bind \"{submission.name}\" after {attempts} attempts. Please retry later.",
+            },
         )
 
     return {

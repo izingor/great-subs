@@ -145,3 +145,31 @@ def test_bind_submission_not_found(client: TestClient):
     import uuid
     response = client.post(f"/submissions/{uuid.uuid4()}/bind")
     assert response.status_code == 404
+
+
+def test_bind_submission_service_failure(client: TestClient, session: Session):
+    sub = Submission(name="Fail Test", status="new")
+    session.add(sub)
+    session.commit()
+    session.refresh(sub)
+
+    with patch("routers.submissions.call_bind_service", new_callable=AsyncMock) as mock_bind:
+        mock_bind.return_value = (False, 5)
+
+        response = client.post(f"/submissions/{sub.id}/bind")
+        assert response.status_code == 502
+        data = response.json()
+        assert data["submission"]["status"] == "bind_failed"
+        assert data["attempts"] == 5
+        assert "message" in data
+
+
+def test_search_submissions_by_name(client: TestClient, session: Session):
+    session.add(Submission(name="Alpha Corp", status="new"))
+    session.add(Submission(name="Beta Inc", status="new"))
+    session.commit()
+
+    res = client.get("/submissions/?name=Alpha")
+    data = res.json()
+    assert data["total"] == 1
+    assert data["items"][0]["name"] == "Alpha Corp"

@@ -2,8 +2,8 @@ import type { ReactElement } from "react";
 import { Button, CircularProgress } from "@mui/material";
 import CancelIcon from "@mui/icons-material/Cancel";
 import BoltIcon from "@mui/icons-material/Bolt";
-import { useBindSubmissionMutation } from "@/store/api";
-import type { Submission } from "@/types/submission";
+import { useBindSubmissionMutation } from "@/store";
+import type { Submission } from "@/types";
 
 type BindButtonProps = {
   readonly submission: Submission;

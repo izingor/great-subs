@@ -11,13 +11,9 @@ import {
   TablePagination,
 } from "@mui/material";
 import InboxIcon from "@mui/icons-material/Inbox";
-import type { Submission } from "@/types/submission";
+import type { Submission } from "@/types";
 import { SubmissionRow } from "./SubmissionRow";
-import { Subtitle } from "@/components/typography/Typography";
-import {
-  StateContainer,
-  StateIconContent,
-} from "@/components/layouts/StateDisplay";
+import { Subtitle, StateContainer, StateIconContent } from "@/components";
 
 const StyledTable = styled(Table)({
   minWidth: 650,

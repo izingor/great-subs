@@ -1,7 +1,7 @@
 import { createContext, useMemo, useEffect, type ReactNode } from "react";
 import { ThemeProvider, CssBaseline } from "@mui/material";
 import { getTheme } from "@/theme";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useLocalStorage } from "@/hooks";
 
 export const ColorModeContext = createContext({ toggleColorMode: () => {} });
 

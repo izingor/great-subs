@@ -10,11 +10,9 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import {
-  useDeleteSubmissionMutation,
-} from "@/store/api";
-import type { Submission, SubmissionStatus } from "@/types/submission";
-import { H4, Subtitle } from "@/components/typography/Typography";
+import { useDeleteSubmissionMutation } from "@/store";
+import type { Submission, SubmissionStatus } from "@/types";
+import { H4, Subtitle } from "@/components";
 import { BindButton } from "./BindButton";
 
 const STATUS_COLOR: Record<
@@ -104,7 +102,9 @@ export const SubmissionRow = ({
       <ResponsiveTableCell>
         <DateText>{formattedDate}</DateText>
       </ResponsiveTableCell>
-      <TableCell><BindButton submission={submission} /></TableCell>
+      <TableCell>
+        <BindButton submission={submission} />
+      </TableCell>
       <TableCell align="right">
         {showDeleteConfirm ? (
           <ConfirmActionGroup>

@@ -1,16 +1,15 @@
 import { useState } from "react";
-import { Box, Button, styled } from "@mui/material";
-import { H4, Subtitle } from "@/components/typography/Typography";
-import { PageContainer, PageHeader } from "@/components/layouts/PageLayout";
 import AddIcon from "@mui/icons-material/Add";
-import { useGetSubmissionsQuery } from "@/store/api";
-import { SubmissionList } from "./sub-components/SubmissionList";
-import { SubmissionForm } from "./sub-components/SubmissionForm";
+import { Box, Button, styled } from "@mui/material";
+import { PageContainer, PageHeader, H4, Subtitle } from "@/components";
+import { useGetSubmissionsQuery } from "@/store";
 import {
+  SubmissionList,
+  SubmissionForm,
   SubmissionFilters,
   ALL_STATUSES,
-} from "./sub-components/SubmissionFilters";
-import type { Submission, SubmissionsFilter } from "@/types/submission";
+} from "./sub-components";
+import type { Submission, SubmissionsFilter } from "@/types";
 
 const PageTitle = styled(H4)(({ theme }) => ({
   marginBottom: theme.spacing(0.5),

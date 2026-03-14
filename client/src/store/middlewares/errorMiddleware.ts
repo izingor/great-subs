@@ -2,6 +2,16 @@ import type { Middleware } from '@reduxjs/toolkit'
 import { isRejectedWithValue } from '@reduxjs/toolkit'
 import { toast } from 'react-toastify'
 
+type ValidationError = { readonly msg: string }
+
+type ErrorPayload = {
+	readonly status?: number
+	readonly data?: {
+		readonly detail?: string | readonly ValidationError[]
+		readonly message?: string
+	}
+}
+
 const HTTP_ERROR_MESSAGES: Record<number, string> = {
 	400: 'Invalid request. Please check your input.',
 	404: 'The requested submission was not found.',
@@ -12,25 +22,23 @@ const HTTP_ERROR_MESSAGES: Record<number, string> = {
 
 const DEFAULT_ERROR_MESSAGE = 'An unexpected error occurred. Please try again.'
 
+const extractErrorMessage = (payload: ErrorPayload): string => {
+	const fallback = HTTP_ERROR_MESSAGES[payload.status ?? 0] ?? DEFAULT_ERROR_MESSAGE
+
+	if (typeof payload.data?.detail === 'string') return payload.data.detail
+
+	if (Array.isArray(payload.data?.detail) && payload.data.detail[0]?.msg) {
+		return payload.data.detail[0].msg
+	}
+
+	if (payload.data?.message) return payload.data.message
+
+	return fallback
+}
+
 export const errorMiddleware: Middleware = () => (next) => (action) => {
 	if (isRejectedWithValue(action)) {
-		const payload = action.payload as { 
-			status?: number; 
-			data?: { detail?: string | { msg: string }[] } 
-		}
-		
-		let message = HTTP_ERROR_MESSAGES[payload.status ?? 0] ?? DEFAULT_ERROR_MESSAGE
-
-		if (payload.data?.detail) {
-			if (typeof payload.data.detail === 'string') {
-				message = payload.data.detail
-			} else if (Array.isArray(payload.data.detail) && payload.data.detail[0]?.msg) {
-				// Handle FastAPI validation errors
-				message = payload.data.detail[0].msg
-			}
-		}
-
-		toast.error(message)
+		toast.error(extractErrorMessage(action.payload as ErrorPayload))
 	}
 
 	return next(action)

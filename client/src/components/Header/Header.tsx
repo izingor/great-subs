@@ -1,13 +1,7 @@
 import type { ReactNode } from "react";
-import {
-  AppBar,
-  Toolbar,
-  Box,
-  Container,
-  styled,
-} from "@mui/material";
-import { ThemeToggle } from "./ThemeToggle";
-import { Subtitle } from "@/components/typography/Typography";
+import { AppBar, Toolbar, Box, Container, styled } from "@mui/material";
+import { Subtitle } from "@/components";
+import { ThemeToggle } from "./sub-components";
 
 type HeaderProps = {
   readonly children?: ReactNode;
@@ -59,7 +53,7 @@ export const Header = ({ children }: HeaderProps): React.ReactElement => (
         <LogoContainer>
           <LogoIcon src="/logo.svg" alt="Sub Manager" />
           <LogoText variant="h6" component="span">
-            Sub Manager
+            Subs Manager
           </LogoText>
         </LogoContainer>
         <HeaderActions>
