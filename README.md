@@ -1,17 +1,13 @@
-# 🚀 Great Subs: Resilient Submission Management
+# 🚀 Great Subs: Submission Management
 
 [![Project Status](https://img.shields.io/badge/status-active-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)]()
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)]()
 
-A high-performance, resilient submission management system designed to demonstrate modern microservices patterns, concurrent processing, and fault tolerance.
-
 ---
 
 ## 🏗️ System Architecture
-
-Great Subs is built on a distributed architecture that emphasizes **reliability in the face of instability**.
 
 ```mermaid
 graph TD
