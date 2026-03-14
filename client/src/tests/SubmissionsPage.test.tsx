@@ -1,12 +1,8 @@
-import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { SubmissionsPage } from "@/pages";
-import { Provider } from "react-redux";
-import { configureStore } from "@reduxjs/toolkit";
-import { submissionsApi } from "@/store";
-import { ThemeProvider } from "@mui/material/styles";
-import { createTheme } from "@mui/material";
+import { useGetSubmissionsQuery } from "@/store";
+import { renderWithProviders } from "./test-utils";
 
 // Mock the API module
 vi.mock("@/store", async (importOriginal) => {
@@ -16,29 +12,6 @@ vi.mock("@/store", async (importOriginal) => {
     useGetSubmissionsQuery: vi.fn(),
   };
 });
-
-import { useGetSubmissionsQuery } from "@/store";
-
-// Minimal render wrapper for tests
-const renderWithProviders = (ui: React.ReactElement) => {
-  const store = configureStore({
-    reducer: {
-      [submissionsApi.reducerPath]: submissionsApi.reducer,
-    },
-    middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware({ serializableCheck: false }).concat(
-        submissionsApi.middleware,
-      ),
-  });
-
-  const theme = createTheme({});
-
-  return render(
-    <Provider store={store}>
-      <ThemeProvider theme={theme}>{ui}</ThemeProvider>
-    </Provider>,
-  );
-};
 
 describe("SubmissionsPage Pagination UI", () => {
   const mockUseGetSubmissionsQuery =
