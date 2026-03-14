@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { AppBar, Toolbar, Box, Container, styled } from "@mui/material";
-import { Subtitle } from "@/components/typography";
+import { Subtitle } from "@/components";
 import { ThemeToggle } from "./sub-components";
 
 type HeaderProps = {
