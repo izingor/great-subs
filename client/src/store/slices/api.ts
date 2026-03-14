@@ -8,6 +8,34 @@ import type {
   SubmissionUpdatePayload,
 } from "@/types";
 
+type GetSubmissionsArgs = {
+  status?: string;
+  name?: string;
+  page?: number;
+  size?: number;
+};
+
+interface QueryEntry {
+  endpointName: string;
+  originalArgs: GetSubmissionsArgs;
+}
+
+interface ApiState {
+  queries: Record<string, QueryEntry | undefined>;
+}
+
+interface InternalState {
+  submissionsApi: ApiState;
+}
+
+type DeepWritable<T> = {
+  -readonly [P in keyof T]: T[P] extends (infer U)[] 
+    ? DeepWritable<U>[] 
+    : T[P] extends object 
+      ? DeepWritable<T[P]> 
+      : T[P];
+};
+
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export const submissionsApi = createApi({
@@ -17,7 +45,7 @@ export const submissionsApi = createApi({
   endpoints: (builder) => ({
     getSubmissions: builder.query<
       PaginatedSubmissions,
-      { status?: string; name?: string; page?: number; size?: number }
+      GetSubmissionsArgs
     >({
       query: (params) => ({
         url: "/submissions/",
@@ -28,21 +56,12 @@ export const submissionsApi = createApi({
           ...(params.size && { size: params.size }),
         },
       }),
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.items.map(({ id }) => ({
-                type: "Submission" as const,
-                id,
-              })),
-              { type: "Submissions", id: "PARTIAL-LIST" },
-            ]
-          : [{ type: "Submissions", id: "PARTIAL-LIST" }],
+      providesTags: ["Submissions"],
     }),
 
     getSubmission: builder.query<Submission, string>({
       query: (id) => `/submissions/${id}`,
-      providesTags: (result, error, id) => [{ type: "Submission", id }],
+      providesTags: ["Submission"],
     }),
 
     createSubmission: builder.mutation<
@@ -54,7 +73,43 @@ export const submissionsApi = createApi({
         method: "POST",
         body,
       }),
-      invalidatesTags: [{ type: "Submissions", id: "PARTIAL-LIST" }],
+      async onQueryStarted(_, { dispatch, queryFulfilled, getState }) {
+        try {
+          const { data: response } = await queryFulfilled;
+          const newSubmission = response.data;
+
+          const state = getState() as InternalState;
+          const apiState = state.submissionsApi;
+
+          Object.values(apiState.queries || {}).forEach((query) => {
+            if (query?.endpointName === "getSubmissions") {
+              dispatch(
+                submissionsApi.util.updateQueryData(
+                  "getSubmissions",
+                  query.originalArgs,
+                  (draft: DeepWritable<PaginatedSubmissions>) => {
+                    // Only add to the first page if we are on the first page or if it's not paginated
+                    if (
+                      !query.originalArgs?.page ||
+                      query.originalArgs.page === 1
+                    ) {
+                      draft.items.unshift(newSubmission);
+                      if (
+                        draft.items.length > (query.originalArgs?.size ?? 10)
+                      ) {
+                        draft.items.pop();
+                      }
+                    }
+                    draft.total += 1;
+                  },
+                ),
+              );
+            }
+          });
+        } catch {
+          // No need to undo as we only update on success
+        }
+      },
     }),
 
     updateSubmission: builder.mutation<
@@ -66,21 +121,82 @@ export const submissionsApi = createApi({
         method: "PATCH",
         body: data,
       }),
-      async onQueryStarted({ id, data }, { dispatch, queryFulfilled }) {
-        const patchResult = dispatch(
-          submissionsApi.util.updateQueryData("getSubmission", id, (draft) => {
-            Object.assign(draft, data);
-          }),
+      async onQueryStarted(
+        { id, data },
+        { dispatch, queryFulfilled, getState },
+      ) {
+        const state = getState() as InternalState;
+        const apiState = state.submissionsApi;
+
+        // Optimistically update getSubmission
+        const patchResult1 = dispatch(
+          submissionsApi.util.updateQueryData(
+            "getSubmission",
+            id,
+            (draft: DeepWritable<Submission>) => {
+              Object.assign(draft, data);
+            },
+          ),
         );
+
+        // Optimistically update getSubmissions list entries
+        const patchesList: { undo: () => void }[] = [];
+        Object.values(apiState.queries || {}).forEach((query) => {
+          if (query?.endpointName === "getSubmissions") {
+            const patchResult = dispatch(
+              submissionsApi.util.updateQueryData(
+                "getSubmissions",
+                query.originalArgs,
+                (draft: DeepWritable<PaginatedSubmissions>) => {
+                  const item = draft.items.find((i) => i.id === id) as DeepWritable<Submission> | undefined;
+                  if (item) {
+                    Object.assign(item, data);
+                  }
+                },
+              ),
+            );
+            patchesList.push(patchResult);
+          }
+        });
+
         try {
-          await queryFulfilled;
+          const { data: response } = await queryFulfilled;
+          const updatedSubmission = response.data;
+
+          // Update with actual data from server
+          dispatch(
+            submissionsApi.util.updateQueryData(
+              "getSubmission",
+              id,
+              (draft: DeepWritable<Submission>) => {
+                Object.assign(draft, updatedSubmission);
+              },
+            ),
+          );
+
+          Object.values(apiState.queries || {}).forEach((query) => {
+            if (query?.endpointName === "getSubmissions") {
+              dispatch(
+                submissionsApi.util.updateQueryData(
+                  "getSubmissions",
+                  query.originalArgs,
+                  (draft: DeepWritable<PaginatedSubmissions>) => {
+                    const index = draft.items.findIndex(
+                      (i) => i.id === id,
+                    );
+                    if (index !== -1) {
+                      draft.items[index] = updatedSubmission;
+                    }
+                  },
+                ),
+              );
+            }
+          });
         } catch {
-          patchResult.undo();
+          patchResult1.undo();
+          patchesList.forEach((p) => p.undo());
         }
       },
-      invalidatesTags: (result, error, arg) => [
-        { type: "Submission", id: arg.id },
-      ],
     }),
 
     deleteSubmission: builder.mutation<{ message: string }, string>({
@@ -89,10 +205,38 @@ export const submissionsApi = createApi({
         method: "DELETE",
         body: undefined,
       }),
-      invalidatesTags: (result, error, id) => [
-        { type: "Submission", id },
-        { type: "Submissions", id: "PARTIAL-LIST" },
-      ],
+      async onQueryStarted(id, { dispatch, queryFulfilled, getState }) {
+        const state = getState() as InternalState;
+        const apiState = state.submissionsApi;
+
+        const patchesList: { undo: () => void }[] = [];
+        Object.values(apiState.queries || {}).forEach((query) => {
+          if (query?.endpointName === "getSubmissions") {
+            const patchResult = dispatch(
+              submissionsApi.util.updateQueryData(
+                "getSubmissions",
+                query.originalArgs,
+                (draft: DeepWritable<PaginatedSubmissions>) => {
+                  const index = draft.items.findIndex(
+                    (i) => i.id === id,
+                  );
+                  if (index !== -1) {
+                    draft.items.splice(index, 1);
+                    draft.total -= 1;
+                  }
+                },
+              ),
+            );
+            patchesList.push(patchResult);
+          }
+        });
+
+        try {
+          await queryFulfilled;
+        } catch {
+          patchesList.forEach((p) => p.undo());
+        }
+      },
     }),
 
     bindSubmission: builder.mutation<BindResponse, string>({
@@ -100,7 +244,80 @@ export const submissionsApi = createApi({
         url: `/submissions/${id}/bind`,
         method: "POST",
       }),
-      invalidatesTags: (result, error, id) => [{ type: "Submission", id }],
+      async onQueryStarted(id, { dispatch, queryFulfilled, getState }) {
+        try {
+          const { data: response } = await queryFulfilled;
+          const updatedSubmission = response.submission;
+
+          const state = getState() as InternalState;
+          const apiState = state.submissionsApi;
+
+          // Update getSubmission
+          dispatch(
+            submissionsApi.util.updateQueryData(
+              "getSubmission",
+              id,
+              (draft: DeepWritable<Submission>) => {
+                Object.assign(draft, updatedSubmission);
+              },
+            ),
+          );
+
+          // Update getSubmissions
+          Object.values(apiState.queries || {}).forEach((query) => {
+            if (query?.endpointName === "getSubmissions") {
+              dispatch(
+                submissionsApi.util.updateQueryData(
+                  "getSubmissions",
+                  query.originalArgs,
+                  (draft: DeepWritable<PaginatedSubmissions>) => {
+                    const index = draft.items.findIndex(
+                      (i) => i.id === id,
+                    );
+                    if (index !== -1) {
+                      draft.items[index] = updatedSubmission;
+                    }
+                  },
+                ),
+              );
+            }
+          });
+        } catch {
+          const state = getState() as InternalState;
+          const apiState = state.submissionsApi;
+
+          // Update getSubmission to failed status
+          dispatch(
+            submissionsApi.util.updateQueryData(
+              "getSubmission",
+              id,
+              (draft: DeepWritable<Submission>) => {
+                draft.status = "bind_failed";
+              },
+            ),
+          );
+
+          // Update getSubmissions list to failed status
+          Object.values(apiState.queries || {}).forEach((query) => {
+            if (query?.endpointName === "getSubmissions") {
+              dispatch(
+                submissionsApi.util.updateQueryData(
+                  "getSubmissions",
+                  query.originalArgs,
+                  (draft: DeepWritable<PaginatedSubmissions>) => {
+                    const item = draft.items.find(
+                      (i) => i.id === id,
+                    ) as DeepWritable<Submission> | undefined;
+                    if (item) {
+                      item.status = "bind_failed";
+                    }
+                  },
+                ),
+              );
+            }
+          });
+        }
+      },
     }),
   }),
 });

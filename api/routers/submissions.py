@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 from sqlalchemy import update
 from sqlmodel import Session
@@ -136,7 +137,7 @@ async def bind_submission(
 ):
     log.info("Bind requested — submission_id=%s", submission_id)
 
-    submission = get_submission(session, submission_id)
+    submission = await run_in_threadpool(get_submission, session, submission_id)
     if not submission:
         log.warning("Bind failed — submission not found id=%s", submission_id)
         raise HTTPException(status_code=404, detail="Submission not found")
@@ -160,8 +161,8 @@ async def bind_submission(
         .execution_options(synchronize_session=False)
     )
 
-    result = session.exec(stmt)
-    session.commit()
+    result = await run_in_threadpool(session.exec, stmt)
+    await run_in_threadpool(session.commit)
 
     if result.rowcount == 0:
         log.warning(
@@ -186,13 +187,13 @@ async def bind_submission(
         final_status,
     )
 
-    session.refresh(submission)
+    await run_in_threadpool(session.refresh, submission)
     submission.status = final_status
     submission.claimed_at = None
     submission.updated_at = datetime.now(timezone.utc)
     session.add(submission)
-    session.commit()
-    session.refresh(submission)
+    await run_in_threadpool(session.commit)
+    await run_in_threadpool(session.refresh, submission)
 
     if not success:
         log.error(
