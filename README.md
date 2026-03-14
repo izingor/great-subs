@@ -55,9 +55,10 @@ When a user clicks "Bind", the system manages the state using a `claimed_at` tim
 
 ### 2. Frontend
 
-- **Global Error Handling**: Redux middleware intercepts API errors and displays them via `react-toastify`.
-- **Optimistic UI**: (Conceptual) The UI reflects state changes immediately for a snappier feel.
-- **Theme-Driven Design**: Uses a custom MUI theme with glassmorphism and modern typography.
+- **Global Error & Success Handling**: Custom Redux middleware globally intercepts API responses to display appropriate `react-toastify` alerts for both successes and errors.
+- **Optimistic UI**: Mutates the local cache directly on CRUD operations for an immediate, snappier feel without unnecessarily refetching full arrays.
+- **Theme-Driven Design**: Features a custom MUI theme integrating modern typography, reusable form components (Search, Selects), and distinct thematic buttons.
+- **Advanced Data Table**: Integrated support for comprehensive submission filtering, real-time searching, and dynamic column sorting.
 
 ---
 
@@ -146,13 +147,20 @@ great-subs/
 │   ├── routers/        # API Endpoints (Submissions, etc.)
 │   ├── tests/          # Pytest Integration Tests
 │   ├── bind_client.py  # Resilient HTTP Client
-│   └── main.py         # Application root
+│   ├── crud.py         # Database Operations
+│   ├── models.py       # Entity Models
+│   ├── main.py         # Application root
+│   └── README.md       # API-specific documentation
 ├── bind-service/       # Mock service (simulates failures)
+│   └── README.md       # Bind-service documentation
 ├── client/             # React 19 + TypeScript + MUI
 │   ├── src/            # Theme, Components, Store, Pages
-│   └── nginx.conf      # Production config for Docker
+│   ├── nginx.conf      # Production config for Docker
+│   └── README.md       # Client-specific documentation
 ├── docker-compose.yml  # Multi-container orchestration
-└── run.sh             # Combined dev startup script
+└── run.sh             # Combined dev environment startup script
 ```
+
+> **Note**: Each individual service (`api`, `bind-service`, `client`) contains its own dedicated `README.md` with deep-dive technical breakdowns and localized setup instructions.
 
 ---

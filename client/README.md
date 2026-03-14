@@ -53,6 +53,15 @@ The application uses custom Redux middlewares (`errorMiddleware` and `successMid
 ### 3. Styled System
 Styling is strictly enforced using MUI's `styled` API. We avoid inline styles and generic CSS files in favor of a theme-derived typed system. This ensures that spacing, colors, and typography always align with the design system.
 
+### 4. Optimistic UI Updates
+For standard CRUD operations (Create, Update, Delete), we utilize Redux Toolkit's `onQueryStarted` to manually update the local RTK cache. This provides an immediate, snappy UX by bypassing the need to wait for the server's full response or a complete cache invalidation.
+
+### 5. Reusable Component & Thematic System
+All interactive elements like Buttons (`Primary`, `Secondary`, `Ghost`) and form inputs (`SearchInput`, `SelectBox`) are abstracted into highly reusable generic components. They strictly inherit from the custom MUI theme for unified aesthetic control.
+
+### 6. Accessible Advanced Data Table
+The main submission list features interactive column sorting, real-time filtering, and maintains strict accessibility standards (e.g., proper `aria-hidden` management on overlays/modals).
+
 ## Setup and Running
 
 1. **Install dependencies**:

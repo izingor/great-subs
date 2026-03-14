@@ -42,3 +42,11 @@ Alternatively, you can run all services together from the root of the project us
 - `crud.py`: Create, Read, Update, and Delete operations for database entities.
 - `routers/`: API route definitions (e.g., `submissions.py`).
 - `bind_client.py`: Client for interacting with the external `bind-service`, utilizing `tenacity` for resilience against failures and timeouts.
+
+## Architectural Decisions
+
+### 1. Concurrent Bind Protection
+To ensure that a submission is processed exactly once even when multiple clients attempt to bind it simultaneously, the API uses optimistic concurrency control during the atomic SQL `UPDATE` in `crud.py`. Validating the `rowcount` ensures no double-processing occurs and prevents race-condition errors.
+
+### 2. Standardization of Responses
+API mutations and actions are standardized to return specific success and error messages along with their JSON payloads. This predictable contract enables the frontend middlewares to easily trigger context-aware, global toast notifications.

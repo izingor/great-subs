@@ -18,6 +18,13 @@ The single exposed endpoint `POST /bind` behaves randomly based on predefined th
 
 This behavior ensures that the main API's integration logic (using `tenacity` for retries) is thoroughly exercised in development.
 
+## Importance in Development
+
+By simulating realistic network latency and service outages, `bind-service` helps verify:
+- **Resilience**: The backend API's exponential backoff and retry mechanisms.
+- **Concurrency**: The system's ability to maintain transactional integrity and prevent race conditions when multiple users try to bind the same resource while the external service is hanging.
+- **Feedback**: Proper error propagation to the React frontend client when the maximum number of retries is exceeded, avoiding silent failures.
+
 ## Setup and Running
 
 1. Create a virtual environment and activate it:
