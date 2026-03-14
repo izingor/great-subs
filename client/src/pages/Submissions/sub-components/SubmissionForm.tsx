@@ -59,6 +59,7 @@ export const SubmissionForm = ({
     control,
     handleSubmit,
     reset,
+    setError,
     formState: { errors },
   } = useForm<SubmissionFormValues>({
     resolver: zodResolver(submissionSchema),
@@ -71,7 +72,15 @@ export const SubmissionForm = ({
         ? await updateSubmission({ id: submission.id, data: values })
         : await createSubmission(values);
 
-    if (response?.data) {
+    if (response?.error) {
+      const error = response.error as any;
+      if (error?.status === 400 && typeof error?.data?.detail === "string") {
+        setError("name", {
+          type: "server",
+          message: error.data.detail,
+        });
+      }
+    } else if (response?.data) {
       reset();
       onClose();
     }

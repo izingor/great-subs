@@ -28,12 +28,21 @@ export const submissionsApi = createApi({
           ...(params.size && { size: params.size }),
         },
       }),
-      providesTags: ["Submissions"],
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.items.map(({ id }) => ({
+                type: "Submission" as const,
+                id,
+              })),
+              { type: "Submissions", id: "PARTIAL-LIST" },
+            ]
+          : [{ type: "Submissions", id: "PARTIAL-LIST" }],
     }),
 
     getSubmission: builder.query<Submission, string>({
       query: (id) => `/submissions/${id}`,
-      providesTags: ["Submission"],
+      providesTags: (result, error, id) => [{ type: "Submission", id }],
     }),
 
     createSubmission: builder.mutation<
@@ -45,43 +54,7 @@ export const submissionsApi = createApi({
         method: "POST",
         body,
       }),
-      async onQueryStarted(_, { dispatch, queryFulfilled, getState }) {
-        try {
-          const { data: response } = await queryFulfilled;
-          const newSubmission = response.data;
-
-          const state = getState() as any;
-          const apiState = state.submissionsApi;
-
-          Object.values(apiState.queries || {}).forEach((query: any) => {
-            if (query?.endpointName === "getSubmissions") {
-              dispatch(
-                submissionsApi.util.updateQueryData(
-                  "getSubmissions",
-                  query.originalArgs,
-                  (draft: any) => {
-                    // Only add to the first page if we are on the first page or if it's not paginated
-                    if (
-                      !query.originalArgs?.page ||
-                      query.originalArgs.page === 1
-                    ) {
-                      draft.items.unshift(newSubmission);
-                      if (
-                        draft.items.length > (query.originalArgs?.size ?? 10)
-                      ) {
-                        draft.items.pop();
-                      }
-                    }
-                    draft.total += 1;
-                  },
-                ),
-              );
-            }
-          });
-        } catch {
-          // No need to undo as we only update on success
-        }
-      },
+      invalidatesTags: [{ type: "Submissions", id: "PARTIAL-LIST" }],
     }),
 
     updateSubmission: builder.mutation<
@@ -93,82 +66,21 @@ export const submissionsApi = createApi({
         method: "PATCH",
         body: data,
       }),
-      async onQueryStarted(
-        { id, data },
-        { dispatch, queryFulfilled, getState },
-      ) {
-        const state = getState() as any;
-        const apiState = state.submissionsApi;
-
-        // Optimistically update getSubmission
-        const patchResult1 = dispatch(
-          submissionsApi.util.updateQueryData(
-            "getSubmission",
-            id,
-            (draft: any) => {
-              Object.assign(draft, data);
-            },
-          ),
+      async onQueryStarted({ id, data }, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          submissionsApi.util.updateQueryData("getSubmission", id, (draft) => {
+            Object.assign(draft, data);
+          }),
         );
-
-        // Optimistically update getSubmissions list entries
-        const patchesList: any[] = [];
-        Object.values(apiState.queries || {}).forEach((query: any) => {
-          if (query?.endpointName === "getSubmissions") {
-            const patchResult = dispatch(
-              submissionsApi.util.updateQueryData(
-                "getSubmissions",
-                query.originalArgs,
-                (draft: any) => {
-                  const item = draft.items.find((i: any) => i.id === id);
-                  if (item) {
-                    Object.assign(item, data);
-                  }
-                },
-              ),
-            );
-            patchesList.push(patchResult);
-          }
-        });
-
         try {
-          const { data: response } = await queryFulfilled;
-          const updatedSubmission = response.data;
-
-          // Update with actual data from server
-          dispatch(
-            submissionsApi.util.updateQueryData(
-              "getSubmission",
-              id,
-              (draft: any) => {
-                Object.assign(draft, updatedSubmission);
-              },
-            ),
-          );
-
-          Object.values(apiState.queries || {}).forEach((query: any) => {
-            if (query?.endpointName === "getSubmissions") {
-              dispatch(
-                submissionsApi.util.updateQueryData(
-                  "getSubmissions",
-                  query.originalArgs,
-                  (draft: any) => {
-                    const index = draft.items.findIndex(
-                      (i: any) => i.id === id,
-                    );
-                    if (index !== -1) {
-                      draft.items[index] = updatedSubmission;
-                    }
-                  },
-                ),
-              );
-            }
-          });
+          await queryFulfilled;
         } catch {
-          patchResult1.undo();
-          patchesList.forEach((p) => p.undo());
+          patchResult.undo();
         }
       },
+      invalidatesTags: (result, error, arg) => [
+        { type: "Submission", id: arg.id },
+      ],
     }),
 
     deleteSubmission: builder.mutation<{ message: string }, string>({
@@ -177,36 +89,10 @@ export const submissionsApi = createApi({
         method: "DELETE",
         body: undefined,
       }),
-      async onQueryStarted(id, { dispatch, queryFulfilled, getState }) {
-        const state = getState() as any;
-        const apiState = state.submissionsApi;
-
-        const patchesList: any[] = [];
-        Object.values(apiState.queries || {}).forEach((query: any) => {
-          if (query?.endpointName === "getSubmissions") {
-            const patchResult = dispatch(
-              submissionsApi.util.updateQueryData(
-                "getSubmissions",
-                query.originalArgs,
-                (draft: any) => {
-                  const index = draft.items.findIndex((i: any) => i.id === id);
-                  if (index !== -1) {
-                    draft.items.splice(index, 1);
-                    draft.total -= 1;
-                  }
-                },
-              ),
-            );
-            patchesList.push(patchResult);
-          }
-        });
-
-        try {
-          await queryFulfilled;
-        } catch {
-          patchesList.forEach((p) => p.undo());
-        }
-      },
+      invalidatesTags: (result, error, id) => [
+        { type: "Submission", id },
+        { type: "Submissions", id: "PARTIAL-LIST" },
+      ],
     }),
 
     bindSubmission: builder.mutation<BindResponse, string>({
@@ -214,78 +100,7 @@ export const submissionsApi = createApi({
         url: `/submissions/${id}/bind`,
         method: "POST",
       }),
-      async onQueryStarted(id, { dispatch, queryFulfilled, getState }) {
-        try {
-          const { data: response } = await queryFulfilled;
-          const updatedSubmission = response.submission;
-
-          const state = getState() as any;
-          const apiState = state.submissionsApi;
-
-          // Update getSubmission
-          dispatch(
-            submissionsApi.util.updateQueryData(
-              "getSubmission",
-              id,
-              (draft: any) => {
-                Object.assign(draft, updatedSubmission);
-              },
-            ),
-          );
-
-          // Update getSubmissions
-          Object.values(apiState.queries || {}).forEach((query: any) => {
-            if (query?.endpointName === "getSubmissions") {
-              dispatch(
-                submissionsApi.util.updateQueryData(
-                  "getSubmissions",
-                  query.originalArgs,
-                  (draft: any) => {
-                    const index = draft.items.findIndex(
-                      (i: any) => i.id === id,
-                    );
-                    if (index !== -1) {
-                      draft.items[index] = updatedSubmission;
-                    }
-                  },
-                ),
-              );
-            }
-          });
-        } catch {
-          const state = getState() as any;
-          const apiState = state.submissionsApi;
-
-          // Update getSubmission to failed status
-          dispatch(
-            submissionsApi.util.updateQueryData(
-              "getSubmission",
-              id,
-              (draft: any) => {
-                draft.status = "bind_failed";
-              },
-            ),
-          );
-
-          // Update getSubmissions list to failed status
-          Object.values(apiState.queries || {}).forEach((query: any) => {
-            if (query?.endpointName === "getSubmissions") {
-              dispatch(
-                submissionsApi.util.updateQueryData(
-                  "getSubmissions",
-                  query.originalArgs,
-                  (draft: any) => {
-                    const item = draft.items.find((i: any) => i.id === id);
-                    if (item) {
-                      item.status = "bind_failed";
-                    }
-                  },
-                ),
-              );
-            }
-          });
-        }
-      },
+      invalidatesTags: (result, error, id) => [{ type: "Submission", id }],
     }),
   }),
 });
