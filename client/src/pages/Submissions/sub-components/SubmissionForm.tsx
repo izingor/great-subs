@@ -98,9 +98,10 @@ export const SubmissionForm = ({
           <Controller
             name="name"
             control={control}
-            render={({ field }) => (
+            render={({ field: { ref, ...fieldProps } }) => (
               <TextField
-                {...field}
+                {...fieldProps}
+                inputRef={ref}
                 autoFocus
                 margin="dense"
                 id="name"

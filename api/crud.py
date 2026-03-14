@@ -20,9 +20,9 @@ def get_submissions(
     if status:
         statement = statement.where(Submission.status == status)
     if name:
-        statement = statement.where(Submission.name.contains(name))  # type: ignore[union-attr]
+        statement = statement.where(Submission.name.contains(name))
 
-    count_statement = select(func.count()).select_from(statement.subquery()) # type: ignore
+    count_statement = select(func.count()).select_from(statement.subquery())
     total = session.exec(count_statement).one()
 
     statement = statement.offset((page - 1) * size).limit(size)

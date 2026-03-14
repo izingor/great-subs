@@ -43,12 +43,17 @@ export const SubmissionsPage = (): React.ReactElement => {
 
   const { data: submissions, isLoading } = useGetSubmissionsQuery(queryParams);
 
-  const openCreateForm = (): void => {
+  const openCreateForm = (e: React.MouseEvent<HTMLButtonElement>): void => {
+    e.currentTarget.blur();
     setEditingSubmission(undefined);
     setFormOpen(true);
   };
 
-  const openEditForm = (submission: Submission): void => {
+  const openEditForm = (
+    submission: Submission,
+    e?: React.MouseEvent<HTMLButtonElement>
+  ): void => {
+    e?.currentTarget.blur();
     setEditingSubmission(submission);
     setFormOpen(true);
   };
@@ -69,6 +74,8 @@ export const SubmissionsPage = (): React.ReactElement => {
           variant="contained"
           startIcon={<AddIcon />}
           onClick={openCreateForm}
+          aria-haspopup="dialog"
+          aria-expanded={formOpen}
         >
           New Submission
         </HeaderAction>
