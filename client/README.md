@@ -37,13 +37,6 @@ src/
 └── App.tsx              # Main entry point rendering the app structure
 ```
 
-### Key Import Patterns
-
-We use absolute path aliases (defined in `tsconfig.json`) and barrel exports to keep imports concise:
-
-- **Good**: `import { Button, H1 } from "@/components"`
-- **Avoid**: `import { Button } from "../../components/inputs/Button"`
-
 ## Architectural Decisions
 
 ### 1. Modular Type Declarations
