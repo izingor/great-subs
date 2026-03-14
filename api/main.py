@@ -20,8 +20,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Sayata Submissions API",
-    description="RESTful API for managing insurance submissions",
+    title="Great Subs API",
+    description="RESTful API for managing application submissions",
     version="1.0.0",
     lifespan=lifespan,
 )

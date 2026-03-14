@@ -68,7 +68,7 @@ export const SubmissionsPage = (): React.ReactElement => {
       <PageHeader>
         <Box>
           <PageTitle component="h2">Submissions</PageTitle>
-          <Subtitle>Manage and bind your insurance submissions</Subtitle>
+          <Subtitle>Manage and bind your application submissions</Subtitle>
         </Box>
         <HeaderAction
           variant="contained"

@@ -9,7 +9,7 @@ This is a mock external service used by the main API to test resilience, retry l
 
 ## Purpose & Behavior
 
-The purpose of this service is to simulate an unreliable third-party API that manages the "binding" of an insurance submission.
+The purpose of this service is to simulate an unreliable third-party API that manages the "binding" of a submission.
 
 The single exposed endpoint `POST /bind` behaves randomly based on predefined thresholds:
 - **Success (~50% chance)**: Returns a `200 OK` with `{"status": "success"}`.

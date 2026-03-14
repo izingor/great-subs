@@ -1,6 +1,6 @@
-# Sayata Submissions API
+# Great Subs API
 
-This is the backend service for managing insurance submissions. It provides a RESTful API built with **FastAPI** and uses **SQLModel** (backed by **SQLite**) for data persistence.
+This is the backend service for managing application submissions. It provides a RESTful API built with **FastAPI** and uses **SQLModel** (backed by **SQLite**) for data persistence.
 
 ## Core Technologies
 

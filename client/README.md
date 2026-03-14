@@ -1,6 +1,6 @@
 # Great Subs Client
 
-This is the frontend application for managing insurance submissions. It is a modern single-page application built with **React 19**, styled with **Material UI**, and powered by **Vite**.
+This is the frontend application for managing application submissions. It is a modern single-page application built with **React 19**, styled with **Material UI**, and powered by **Vite**.
 
 ## Core Technologies
 
