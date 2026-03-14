@@ -9,15 +9,15 @@ import { ThemeProvider } from "@mui/material/styles";
 import { createTheme } from "@mui/material";
 
 // Mock the API module
-vi.mock("@/store/api", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/store/slices/api")>();
+vi.mock("@/store", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/store")>();
   return {
     ...actual,
     useGetSubmissionsQuery: vi.fn(),
   };
 });
 
-import { useGetSubmissionsQuery } from "@/store/slices/api";
+import { useGetSubmissionsQuery } from "@/store";
 
 // Minimal render wrapper for tests
 const renderWithProviders = (ui: React.ReactElement) => {
