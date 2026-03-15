@@ -282,7 +282,13 @@ export const submissionsApi = createApi({
               );
             }
           });
-        } catch {
+        } catch (err: unknown) {
+          // If the error is a 409 Conflict, it means the submission is already being processed.
+          // In this case, we don't want to change the status to "bind_failed".
+          if ((err as { error?: { status?: number } }).error?.status === 409) {
+            return;
+          }
+
           const state = getState() as InternalState;
           const apiState = state.submissionsApi;
 

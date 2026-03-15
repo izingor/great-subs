@@ -16,7 +16,7 @@ def get_submissions(
     size: int = 10,
 ) -> tuple[list[Submission], int]:
     """Return paginated submissions and total count."""
-    statement = select(Submission)
+    statement = select(Submission).order_by(Submission.created_at.desc())
     if status:
         statement = statement.where(Submission.status == status)
     if name:

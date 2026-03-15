@@ -38,7 +38,14 @@ const extractErrorMessage = (payload: ErrorPayload): string => {
 
 export const errorMiddleware: Middleware = () => (next) => (action) => {
 	if (isRejectedWithValue(action)) {
-		toast.error(extractErrorMessage(action.payload as ErrorPayload))
+		const payload = action.payload as ErrorPayload
+		const message = extractErrorMessage(payload)
+
+		if (payload.status === 409) {
+			toast.warn(message)
+		} else {
+			toast.error(message)
+		}
 	}
 
 	return next(action)

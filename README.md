@@ -54,7 +54,7 @@ When a user clicks "Bind", the system manages the state using a `claimed_at` tim
 - **Global Error & Success Handling**: Custom Redux middleware globally intercepts API responses to display appropriate `react-toastify` alerts for both successes and errors.
 - **Optimistic UI**: Mutates the local cache directly on CRUD operations for an immediate, snappier feel without unnecessarily refetching full arrays.
 - **Theme-Driven Design**: Features a custom MUI theme integrating modern typography, reusable form components (Search, Selects), and distinct thematic buttons.
-- **Advanced Data Table**: Integrated support for comprehensive submission filtering, real-time searching, and dynamic column sorting.
+- **Advanced Data Table**: Integrated support for comprehensive submission filtering and real-time searching.
 
 ---
 
