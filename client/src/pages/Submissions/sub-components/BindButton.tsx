@@ -10,16 +10,16 @@ type BindButtonProps = {
 };
 
 export const BindButton = ({ submission }: BindButtonProps): ReactElement => {
-  const [bindSubmission, { isLoading: isBinding }] =
-    useBindSubmissionMutation();
+  const [bindSubmission, { isLoading: isBinding }] = useBindSubmissionMutation();
 
   const handleBind = async (): Promise<void> => {
     await bindSubmission(submission.id).unwrap();
   };
 
+  const isActuallyBinding = isBinding || !!submission.claimed_at;
   const disabled = submission.status === "bound";
 
-  if (isBinding) {
+  if (isActuallyBinding) {
     return (
       <Button
         variant="outlined"

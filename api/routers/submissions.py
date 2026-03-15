@@ -19,6 +19,9 @@ from crud import (
 from database import get_session
 from logger import build_logger
 from models import PaginatedSubmissions, Submission, SubmissionCreate, SubmissionRead, SubmissionUpdate
+from notifier import notifier
+from fastapi.responses import StreamingResponse
+
 
 log = build_logger("api.submissions")
 
@@ -41,13 +44,31 @@ def list_submissions(
     return PaginatedSubmissions(items=items, total=total, page=page, size=size)
 
 
+@router.get("/events")
+async def sse_submissions():
+    """
+    SSE endpoint to notify clients about submission updates.
+    """
+    async def event_generator():
+        queue = await notifier.subscribe()
+        try:
+            while True:
+                data = await queue.get()
+                yield f"data: {data}\n\n"
+        finally:
+            notifier.unsubscribe(queue)
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+
 @router.post("/", status_code=201)
-def create_new_submission(
+async def create_new_submission(
     data: SubmissionCreate,
     session: Session = Depends(get_session),
 ):
     log.info("Creating submission — name=%s status=%s", data.name, data.status)
-    existing = get_submission_by_name(session, data.name)
+    existing = await run_in_threadpool(get_submission_by_name, session, data.name)
     if existing:
         log.warning("Submission creation failed — name already exists: %s", data.name)
         raise HTTPException(
@@ -55,8 +76,15 @@ def create_new_submission(
             detail=f"A submission with the name \"{data.name}\" already exists."
         )
 
-    submission = create_submission(session, data)
+    submission = await run_in_threadpool(create_submission, session, data)
     log.info("Submission created — id=%s", submission.id)
+    
+    # Broadcast creation
+    await notifier.broadcast(
+        "submission_created",
+        SubmissionRead.model_validate(submission).model_dump(mode="json")
+    )
+
     return {
         "message": f"Submission \"{submission.name}\" created successfully",
         "data": SubmissionRead.model_validate(submission)
@@ -79,7 +107,7 @@ def read_submission(
 
 
 @router.patch("/{submission_id}")
-def patch_submission(
+async def patch_submission(
     submission_id: UUID,
     data: SubmissionUpdate,
     session: Session = Depends(get_session),
@@ -90,7 +118,7 @@ def patch_submission(
         data.model_dump(exclude_unset=True),
     )
     if data.name:
-        existing = get_submission_by_name(session, data.name)
+        existing = await run_in_threadpool(get_submission_by_name, session, data.name)
         if existing and existing.id != submission_id:
             log.warning("Submission update failed — name already exists: %s", data.name)
             raise HTTPException(
@@ -98,13 +126,20 @@ def patch_submission(
                 detail=f"A submission with the name \"{data.name}\" already exists."
             )
 
-    submission = update_submission(session, submission_id, data)
+    submission = await run_in_threadpool(update_submission, session, submission_id, data)
 
     if not submission:
         log.warning("Submission not found for update — id=%s", submission_id)
         raise HTTPException(status_code=404, detail="Submission not found")
 
     log.info("Submission updated — id=%s new_status=%s", submission_id, submission.status)
+    
+    # Broadcast update
+    await notifier.broadcast(
+        "submission_updated",
+        SubmissionRead.model_validate(submission).model_dump(mode="json")
+    )
+
     return {
         "message": f"Submission \"{submission.name}\" updated successfully",
         "data": SubmissionRead.model_validate(submission)
@@ -112,21 +147,28 @@ def patch_submission(
 
 
 @router.delete("/{submission_id}", status_code=200)
-def remove_submission(
+async def remove_submission(
     submission_id: UUID,
     session: Session = Depends(get_session),
 ):
     log.info("Deleting submission — id=%s", submission_id)
-    submission = get_submission(session, submission_id)
+    submission = await run_in_threadpool(get_submission, session, submission_id)
     
     if not submission:
         log.warning("Submission not found for deletion — id=%s", submission_id)
         raise HTTPException(status_code=404, detail="Submission not found")
 
     name = submission.name
-    delete_submission(session, submission_id)
+    await run_in_threadpool(delete_submission, session, submission_id)
 
     log.info("Submission deleted — id=%s", submission_id)
+    
+    # Broadcast deletion
+    await notifier.broadcast(
+        "submission_deleted",
+        {"id": str(submission_id)}
+    )
+
     return {"message": f"Submission \"{name}\" deleted successfully"}
 
 
@@ -176,6 +218,12 @@ async def bind_submission(
 
     log.info("Claim acquired — submission_id=%s, calling bind service", submission_id)
 
+    # Broadcast update via SSE (status is still 'new' or 'bind_failed', but claimed_at is set)
+    await notifier.broadcast(
+        "submission_updated", 
+        SubmissionRead.model_validate(submission).model_dump(mode="json")
+    )
+
     success, attempts = await call_bind_service()
     final_status = "bound" if success else "bind_failed"
 
@@ -194,6 +242,13 @@ async def bind_submission(
     session.add(submission)
     await run_in_threadpool(session.commit)
     await run_in_threadpool(session.refresh, submission)
+
+    # Broadcast update via SSE
+    await notifier.broadcast(
+        "submission_updated", 
+        SubmissionRead.model_validate(submission).model_dump(mode="json")
+    )
+
 
     if not success:
         log.error(
