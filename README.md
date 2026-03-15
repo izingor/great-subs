@@ -29,11 +29,11 @@ graph TD
 
 ## 📦 Core Components
 
-| Component                          | Stack                                                     | Purpose                                                                 |
-| :--------------------------------- | :-------------------------------------------------------- | :---------------------------------------------------------------------- |
+| Component                          | Stack                                                    | Purpose                                                                 |
+| :--------------------------------- | :------------------------------------------------------- | :---------------------------------------------------------------------- |
 | **[Frontend Client](./client)**    | React 19, TypeScript 5.9, Vite 7, MUI v7, RTK Query, Zod | Premium UI with real-time feedback, form validation, and optimistic UX. |
-| **[Backend API](./api)**           | FastAPI, SQLModel, Tenacity, HTTPX, Pytest                | Central orchestrator handling business logic and resilience.             |
-| **[Bind Service](./bind-service)** | FastAPI, Uvicorn                                          | A mock service simulating ~50% failure & timeout rates.                  |
+| **[Backend API](./api)**           | FastAPI, SQLModel, Tenacity, HTTPX, Pytest               | Central orchestrator handling business logic and resilience.            |
+| **[Bind Service](./bind-service)** | FastAPI, Uvicorn                                         | A mock service simulating ~50% failure & timeout rates.                 |
 
 ---
 
@@ -97,6 +97,7 @@ src/
 #### Production Build (Docker)
 
 Multi-stage Dockerfile:
+
 1. **Builder** (`node:20-alpine`) — `npm ci` + `npm run build`
 2. **Runtime** (`nginx:alpine`) — serves `dist/` via Nginx with SPA routing (`try_files`) and `/api/` proxy to the backend
 
@@ -116,27 +117,6 @@ Multi-stage Dockerfile:
 - **SQLite** — embedded, zero-configuration database; persisted via a Docker volume (`api-data`); engine configured with `check_same_thread=False`
 - **Data model**: UUID primary keys, `created_at`/`updated_at` UTC timestamps, `claimed_at` field (distributed lock), unique constraint on `name`, paginated queries with status/name filtering, default sort by `created_at DESC`
 
-#### The Bind Workflow
-
-```mermaid
-sequenceDiagram
-    participant Client
-    participant API
-    participant DB
-    participant BindService
-
-    Client->>API: POST /submissions/{id}/bind
-    API->>DB: Atomic UPDATE SET claimed_at=now WHERE claimed_at IS NULL OR stale
-    alt Claim acquired (rowcount > 0)
-        API->>BindService: POST /bind (with retries)
-        BindService-->>API: 200 OK / 500 / 504 Timeout
-        API->>DB: UPDATE status=bound|bind_failed, claimed_at=NULL
-        API-->>Client: 200 (success) / 502 (exhausted retries)
-    else Claim rejected (rowcount = 0)
-        API-->>Client: 409 Conflict
-    end
-```
-
 - **SQLAlchemy `update()`** — atomic `UPDATE ... WHERE` acting as a distributed lock; a submission is claimable only if `claimed_at` is `NULL` or older than 45 seconds
 - **`run_in_threadpool`** — offloads synchronous SQLModel operations to a thread pool to avoid blocking the async event loop
 - **HTTPX** — async HTTP client for calling the bind service with configurable timeouts (5s)
@@ -144,18 +124,19 @@ sequenceDiagram
 
 #### API Endpoints
 
-| Method   | Endpoint                     | Description                                  |
-| :------- | :--------------------------- | :------------------------------------------- |
-| `GET`    | `/submissions/`              | Paginated list with status/name filters      |
-| `POST`   | `/submissions/`              | Create a new submission (unique name enforced)|
-| `GET`    | `/submissions/{id}`          | Fetch a single submission                    |
-| `PATCH`  | `/submissions/{id}`          | Partial update (name, status)                |
-| `DELETE` | `/submissions/{id}`          | Delete a submission                          |
-| `POST`   | `/submissions/{id}/bind`     | Trigger the resilient bind workflow           |
+| Method   | Endpoint                 | Description                                    |
+| :------- | :----------------------- | :--------------------------------------------- |
+| `GET`    | `/submissions/`          | Paginated list with status/name filters        |
+| `POST`   | `/submissions/`          | Create a new submission (unique name enforced) |
+| `GET`    | `/submissions/{id}`      | Fetch a single submission                      |
+| `PATCH`  | `/submissions/{id}`      | Partial update (name, status)                  |
+| `DELETE` | `/submissions/{id}`      | Delete a submission                            |
+| `POST`   | `/submissions/{id}/bind` | Trigger the resilient bind workflow            |
 
 #### Logging
 
 Custom `build_logger` utility producing structured output:
+
 ```
 2026-03-15T10:00:00 | INFO     | api.submissions | bind_submission | Bind requested — submission_id=...
 ```
@@ -187,11 +168,11 @@ An intentionally **flaky** mock that simulates an unreliable external API.
 
 Uses `random.random()` to produce three outcomes:
 
-| Roll Range      | Outcome             | HTTP Response                          |
-| :-------------- | :------------------ | :------------------------------------- |
-| `0.00 – 0.49`   | ✅ Success           | `200 OK` — `{ "status": "success" }`  |
-| `0.50 – 0.79`   | ❌ Server Error      | `500 Internal Server Error`            |
-| `0.80 – 1.00`   | ⏱️ Timeout           | Sleeps 15s, then `504 Gateway Timeout` |
+| Roll Range    | Outcome         | HTTP Response                          |
+| :------------ | :-------------- | :------------------------------------- |
+| `0.00 – 0.49` | ✅ Success      | `200 OK` — `{ "status": "success" }`   |
+| `0.50 – 0.79` | ❌ Server Error | `500 Internal Server Error`            |
+| `0.80 – 1.00` | ⏱️ Timeout      | Sleeps 15s, then `504 Gateway Timeout` |
 
 #### Production Build (Docker)
 
